@@ -4,6 +4,7 @@
 # See https://juju.is/docs/sdk/charmcraft-config for guidance.
 
 type: charm
+subordinate: true
 bases:
   - build-on:
     - name: ubuntu

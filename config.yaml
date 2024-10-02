@@ -6,11 +6,14 @@
 # See https://juju.is/docs/config for guidance.
 
 options:
-  # An example config option to customise the log level of the workload
-  log-level:
+  location:
     description: |
-      Configures the log level of gunicorn. 
-
-      Acceptable values are: "info", "debug", "warning", "error" and "critical"
-    default: "info"
+      The URL to this set of backends is tied to, e.g., ubuntu.com/about.
+    type: string
+  backends:
+    description: |
+      A comma-separated list of IPs and ports in PROTOCOL:IP format for the backends serving the
+      content to cache, e.g., https:10.10.10.10, http:10.10.1.1. The protocols available are http
+      and https. Port 80 will be used for http, and port 443 for https. If multiple IPs are 
+      provided, the access to the backends will be load-balanced.
     type: string
