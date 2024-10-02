@@ -12,3 +12,9 @@ bases:
     run-on:
     - name: ubuntu
       channel: "22.04"
+
+requires:
+  config:
+    interface: content-cache-config
+    scope: container
+    limit: 1
