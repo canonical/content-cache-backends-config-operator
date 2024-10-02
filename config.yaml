@@ -8,7 +8,7 @@
 options:
   location:
     description: |
-      The URL to this set of backends is tied to, e.g., ubuntu.com/about.
+      The URL to this set of backends is tied to, e.g., ubuntu.com/about. Regex is not 
     type: string
   backends:
     description: |
