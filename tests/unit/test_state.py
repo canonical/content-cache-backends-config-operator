@@ -4,11 +4,11 @@
 from ipaddress import IPv4Address
 
 import pytest
+from factories import MockCharmFactory
 
 from errors import ConfigurationError
 from src.state import PROTOCOL_CONFIG_NAME
 from state import BACKENDS_CONFIG_NAME, LOCATION_CONFIG_NAME, Configuration
-from factories import MockCharmFactory
 
 
 def test_valid_config():
@@ -44,9 +44,15 @@ def test_empty_location():
     [
         pytest.param("", "Empty backends configuration found", id="empty backends"),
         pytest.param(
-            "asdf", "Config error: ['asdf: value is not a valid IPv4 or IPv6 address']", id="incorrect backends format"
+            "asdf",
+            "Config error: ['asdf: value is not a valid IPv4 or IPv6 address']",
+            id="incorrect backends format",
         ),
-        pytest.param("10.10.1", "Config error: ['10.10.1: value is not a valid IPv4 or IPv6 address']", id="incorrect IP format"),
+        pytest.param(
+            "10.10.1",
+            "Config error: ['10.10.1: value is not a valid IPv4 or IPv6 address']",
+            id="incorrect IP format",
+        ),
     ],
 )
 def test_config_backends_invalid_backends(invalid_backends: str, error_message: str):
@@ -91,6 +97,6 @@ def test_configuration_to_dict():
     data = config.to_integration_data()
     assert data == {
         "location": "example.com",
-        'backends': '["10.10.1.1", "10.10.2.2"]',
-        'protocol': 'https',
+        "backends": '["10.10.1.1", "10.10.2.2"]',
+        "protocol": "https",
     }

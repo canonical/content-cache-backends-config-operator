@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import factory
 
-from src.state import BACKENDS_CONFIG_NAME, LOCATION_CONFIG_NAME, PROTOCOL_CONFIG_NAME 
+from src.state import BACKENDS_CONFIG_NAME, LOCATION_CONFIG_NAME, PROTOCOL_CONFIG_NAME
 
 T = typing.TypeVar("T")
 
@@ -36,6 +36,6 @@ class MockCharmFactory(factory.Factory):
         {
             LOCATION_CONFIG_NAME: "example.com",
             BACKENDS_CONFIG_NAME: "10.10.1.1, 10.10.2.2",
-            PROTOCOL_CONFIG_NAME: "https"
+            PROTOCOL_CONFIG_NAME: "https",
         }
     )
