@@ -12,8 +12,11 @@ options:
     type: string
   backends:
     description: |
-      A comma-separated list of IPs and ports in PROTOCOL:IP format for the backends serving the
-      content to cache, e.g., https:10.10.10.10, http:10.10.1.1. The protocols available are http
-      and https. Port 80 will be used for http, and port 443 for https. If multiple IPs are 
-      provided, the access to the backends will be load-balanced.
+      A comma-separated list of IPs. If multiple IPs are provided, the access to the backends will 
+      be load-balanced.
     type: string
+  protocol:
+    description: |
+      The protocol to request the backends. Can be http or https.
+    type: string
+    default: https

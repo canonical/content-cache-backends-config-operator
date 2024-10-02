@@ -6,13 +6,13 @@
 import pytest
 from ops.testing import Harness
 
-from charm import ContentCacheBackendConfigCharm
+from charm import ContentCacheBackendsConfigCharm
 
 
 @pytest.fixture(name="harness", scope="function")
 def harness_fixture():
     """The ops testing harness fixture."""
-    harness = Harness(ContentCacheBackendConfigCharm)
+    harness = Harness(ContentCacheBackendsConfigCharm)
     harness.begin_with_initial_hooks()
     return harness
 

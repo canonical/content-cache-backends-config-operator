@@ -10,7 +10,7 @@ import pytest
 from ops.testing import Harness
 
 import state
-from charm import CONFIG_INTEGRATION_NAME, ContentCacheBackendConfigCharm
+from charm import CONFIG_INTEGRATION_NAME, ContentCacheBackendsConfigCharm
 
 SAMPLE_CONFIG = {
     state.LOCATION_CONFIG_NAME: "example.com",
@@ -18,11 +18,11 @@ SAMPLE_CONFIG = {
 }
 
 
-def test_start(charm: ContentCacheBackendConfigCharm):
+def test_start(charm: ContentCacheBackendsConfigCharm):
     assert charm.unit.status == ops.BlockedStatus("Waiting for configurations.")
 
 
-def test_config_config(charm: ContentCacheBackendConfigCharm, harness: Harness):
+def test_config_config(charm: ContentCacheBackendsConfigCharm, harness: Harness):
     """
     arrange: Charm with no integration setup.
     act: Update the configuration with valid values.
@@ -41,7 +41,7 @@ def test_config_config(charm: ContentCacheBackendConfigCharm, harness: Harness):
     ],
 )
 def test_integration_config_missing(
-    charm: ContentCacheBackendConfigCharm, harness: Harness, event: str
+    charm: ContentCacheBackendsConfigCharm, harness: Harness, event: str
 ):
     mock_event = MagicMock()
     getattr(charm, event)(mock_event)
@@ -56,7 +56,7 @@ def test_integration_config_missing(
         pytest.param("_on_config_relation_changed", id="config_relation_changed"),
     ],
 )
-def test_integration_data(charm: ContentCacheBackendConfigCharm, harness: Harness, event: str):
+def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harness, event: str):
     harness.update_config(SAMPLE_CONFIG)
 
     relation_id = harness.add_relation(

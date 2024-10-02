@@ -4,11 +4,11 @@
 from ipaddress import IPv4Address
 
 import pytest
-from factories import MockCharmFactory
-from pydantic import IPvAnyAddress
 
 from errors import ConfigurationError
-from state import BACKENDS_CONFIG_NAME, LOCATION_CONFIG_NAME, Backend, Configuration
+from src.state import PROTOCOL_CONFIG_NAME
+from state import BACKENDS_CONFIG_NAME, LOCATION_CONFIG_NAME, Configuration
+from factories import MockCharmFactory
 
 
 def test_valid_config():
@@ -21,10 +21,9 @@ def test_valid_config():
 
     config = Configuration.from_charm(charm)
     assert config.location == "example.com"
-    assert config.backends == (
-        Backend(protocol="http", ip=IPv4Address("10.10.1.1")),
-        Backend(protocol="https", ip=IPv4Address("10.10.2.2")),
-    )
+    assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
+    assert config.protocol == "https"
+
 
 def test_empty_location():
     """
@@ -39,17 +38,15 @@ def test_empty_location():
         Configuration.from_charm(charm)
     assert str(err.value) == "Empty location configuration found"
 
+
 @pytest.mark.parametrize(
     "invalid_backends, error_message",
     [
         pytest.param("", "Empty backends configuration found", id="empty backends"),
-        pytest.param("asdf", "Format issue with backends configuration", id="incorrect backends format"),
-        pytest.param("http:10.10.1", "Unable to parse backends value", id="incorrect IP format"),
         pytest.param(
-            "kafka:10.10.10.10",
-            "Unknown protocol kafka in backends configuration",
-            id="unknown protocol",
+            "asdf", "Config error: ['asdf: value is not a valid IPv4 or IPv6 address']", id="incorrect backends format"
         ),
+        pytest.param("10.10.1", "Config error: ['10.10.1: value is not a valid IPv4 or IPv6 address']", id="incorrect IP format"),
     ],
 )
 def test_config_backends_invalid_backends(invalid_backends: str, error_message: str):
@@ -67,6 +64,21 @@ def test_config_backends_invalid_backends(invalid_backends: str, error_message: 
     assert str(err.value) == error_message
 
 
+def test_config_protocol_invalid():
+    """
+    arrange: Mock charm with invalid protocol config.
+    act: Create the state from the charm.
+    assert: Configuration error raised with a correct error message.
+    """
+    charm = MockCharmFactory()
+    charm.config[PROTOCOL_CONFIG_NAME] = "asdf"
+
+    with pytest.raises(ConfigurationError) as err:
+        Configuration.from_charm(charm)
+
+    assert str(err.value) == "Unknown protocol asdf in backends configuration"
+
+
 def test_configuration_to_dict():
     """
     arrange: Mock charm with valid configurations.
@@ -79,5 +91,6 @@ def test_configuration_to_dict():
     data = config.to_integration_data()
     assert data == {
         "location": "example.com",
-        "backends": '[{"protocol": "http", "ip": "10.10.1.1"}, {"protocol": "https", "ip": "10.10.2.2"}]',
+        'backends': '["10.10.1.1", "10.10.2.2"]',
+        'protocol': 'https',
     }

@@ -18,58 +18,25 @@ HTTP_PROTOCOL_NAME = "http"
 HTTPS_PROTOCOL_NAME = "https"
 LOCATION_CONFIG_NAME = "location"
 BACKENDS_CONFIG_NAME = "backends"
-
-
-class Backend(pydantic.BaseModel):
-    """Represents a single backend.
-
-    Attributes:
-        protocol: The protocol to query the backend.
-        ip: The IP of the backend.
-    """
-
-    protocol: str
-    ip: pydantic.IPvAnyAddress
-    
-    @pydantic.field_validator('protocol')
-    @classmethod
-    def valid_protocol(cls, value: str) -> str:
-        if value not in (HTTP_PROTOCOL_NAME, HTTPS_PROTOCOL_NAME):
-            raise ConfigurationError(f"Unknown protocol {value} in backends configuration")
-        return value
-
-    @classmethod
-    def from_str(cls, backend: str) -> "Backend":
-        """Initialize object from a string.
-
-        Args:
-            backend: A single backend.
-
-        Raises:
-            ConfigurationError: The configuration has errors.
-
-        Returns:
-            The object.
-        """
-        try:
-            protocol, ip = [token.strip() for token in backend.split(":")]
-        except ValueError as err:
-            raise ConfigurationError("Format issue with backends configuration") from err
-
-        return cls(
-            protocol=protocol.lower(),
-            # Ignore mypy warning as pydantic allows for str to pydantic.IPvAnyAddress.
-            ip=ip,  # type: ignore
-        )
+PROTOCOL_CONFIG_NAME = "protocol"
 
 
 class Configuration(pydantic.BaseModel):
     """Represents the configuration."""
 
     location: str
-    backends: tuple[Backend, ...]
+    backends: tuple[pydantic.IPvAnyAddress, ...]
+    protocol: str
 
-    @pydantic.field_validator('location')
+    @pydantic.field_validator("protocol")
+    @classmethod
+    def valid_protocol(cls, value: str) -> str:
+        value = value.lower()
+        if value not in (HTTP_PROTOCOL_NAME, HTTPS_PROTOCOL_NAME):
+            raise ConfigurationError(f"Unknown protocol {value} in backends configuration")
+        return value
+
+    @pydantic.field_validator("location")
     @classmethod
     def valid_location(cls, value: str) -> str:
         if not value:
@@ -87,20 +54,17 @@ class Configuration(pydantic.BaseModel):
             The object.
         """
         location = typing.cast(str, charm.config.get(LOCATION_CONFIG_NAME, "")).lower().strip()
-        
+        protocol = typing.cast(str, charm.config.get(PROTOCOL_CONFIG_NAME, "")).lower().strip()
         backends_str = typing.cast(str, charm.config.get(BACKENDS_CONFIG_NAME, "")).strip()
         if not backends_str:
             raise ConfigurationError("Empty backends configuration found")
 
+        backends = tuple(ip.strip() for ip in backends_str.split(","))
         try:
-            backends = tuple(
-                Backend.from_str(token.strip())
-                for token in backends_str.split(",")
-            )
+            return cls(location=location, backends=backends, protocol=protocol)
         except pydantic.ValidationError as err:
-            raise ConfigurationError("Unable to parse backends value") from err
-
-        return cls(location=location, backends=backends)
+            err_msg = [f'{error["input"]}: {error["msg"]}' for error in err.errors()]
+            raise ConfigurationError(f"Config error: {err_msg}") from err
 
     def to_integration_data(self) -> dict[str, str]:
         """Convert to format supported by integration.
