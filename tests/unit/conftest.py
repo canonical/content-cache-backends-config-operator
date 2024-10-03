@@ -13,6 +13,7 @@ from charm import ContentCacheBackendsConfigCharm
 def harness_fixture():
     """The ops testing harness fixture."""
     harness = Harness(ContentCacheBackendsConfigCharm)
+    harness.set_leader(True)
     harness.begin_with_initial_hooks()
     yield harness
     harness.cleanup()
