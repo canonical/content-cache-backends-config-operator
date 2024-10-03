@@ -59,7 +59,7 @@ class Configuration(pydantic.BaseModel):
         Returns:
             The object.
         """
-        location = typing.cast(str, charm.config.get(LOCATION_CONFIG_NAME, "")).lower().strip()
+        location = typing.cast(str, charm.config.get(LOCATION_CONFIG_NAME, "")).strip()
         protocol = typing.cast(str, charm.config.get(PROTOCOL_CONFIG_NAME, "")).lower().strip()
         backends_str = typing.cast(str, charm.config.get(BACKENDS_CONFIG_NAME, "")).strip()
         if not backends_str:
