@@ -42,7 +42,9 @@ def test_empty_location():
 
     with pytest.raises(ConfigurationError) as err:
         Configuration.from_charm(charm)
-    assert str(err.value) == "Config error: ['location = : String should have at least 1 character']"
+    assert (
+        str(err.value) == "Config error: ['location = : String should have at least 1 character']"
+    )
 
 
 @pytest.mark.parametrize(
@@ -88,7 +90,10 @@ def test_config_protocol_invalid():
     with pytest.raises(ConfigurationError) as err:
         Configuration.from_charm(charm)
 
-    assert str(err.value) == "Config error: [\"protocol = unknown: Input should be 'http' or 'https'\"]"
+    assert (
+        str(err.value)
+        == "Config error: [\"protocol = unknown: Input should be 'http' or 'https'\"]"
+    )
 
 
 def test_configuration_to_dict():

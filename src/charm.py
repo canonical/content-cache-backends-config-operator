@@ -14,7 +14,7 @@ from state import Configuration
 
 logger = logging.getLogger(__name__)
 
-CONFIG_INTEGRATION_NAME = "cache-config"
+CACHE_CONFIG_INTEGRATION_NAME = "cache-config"
 
 
 class ContentCacheBackendsConfigCharm(ops.CharmBase):
@@ -30,11 +30,11 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
         framework.observe(self.on.start, self._on_start)
         framework.observe(self.on.config_changed, self._on_config_changed)
         framework.observe(
-            self.on[CONFIG_INTEGRATION_NAME].relation_changed,
+            self.on[CACHE_CONFIG_INTEGRATION_NAME].relation_changed,
             self._on_cache_config_relation_changed,
         )
         framework.observe(
-            self.on[CONFIG_INTEGRATION_NAME].relation_broken,
+            self.on[CACHE_CONFIG_INTEGRATION_NAME].relation_broken,
             self._on_cache_config_relation_broken,
         )
 
@@ -60,7 +60,7 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
             logger.debug("Not leader: not setting the integration data")
             return
 
-        logger.info("Leader: loading configuration")
+        logger.info("Loading configuration")
         try:
             config = Configuration.from_charm(self)
         except ConfigurationError as err:
@@ -68,16 +68,20 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
             self.unit.status = ops.BlockedStatus(str(err))
             return
 
-        logger.info("Leader: setting integration data")
-        if self.model.relations[CONFIG_INTEGRATION_NAME]:
-            rel = self.model.relations[CONFIG_INTEGRATION_NAME][0]
+        logger.info("Setting integration data")
+        if self.model.relations[CACHE_CONFIG_INTEGRATION_NAME]:
+            rel = self.model.relations[CACHE_CONFIG_INTEGRATION_NAME][0]
             rel.data[self.app].update(config.to_integration_data())
-        logger.info("Leader: integration data set")
+        logger.info("Integration data set")
         self._set_status()
 
-    def _set_status(self):
+    def _set_status(self) -> None:
         """Set the charm status."""
-        if not self.model.relations[CONFIG_INTEGRATION_NAME]:
+        if not self.unit.is_leader():
+            logger.debug("Not leader: not setting the status")
+            return
+
+        if not self.model.relations[CACHE_CONFIG_INTEGRATION_NAME]:
             logger.info("No integration found")
             self.unit.status = ops.BlockedStatus("Waiting for integration")
             return

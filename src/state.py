@@ -19,9 +19,18 @@ LOCATION_CONFIG_NAME = "location"
 BACKENDS_CONFIG_NAME = "backends"
 PROTOCOL_CONFIG_NAME = "protocol"
 
+
 class Protocol(str, enum.Enum):
+    """Protocol to request backends.
+
+    Attributes:
+        HTTP: Use HTTP for requests.
+        HTTPS: Use HTTPS for requests.
+    """
+
     HTTP = "http"
     HTTPS = "https"
+
 
 class Configuration(pydantic.BaseModel):
     """Represents the configuration.
@@ -61,7 +70,9 @@ class Configuration(pydantic.BaseModel):
             # Pydantic allows converting str to IPvAnyAddress.
             return cls(location=location, backends=backends, protocol=protocol)  # type: ignore
         except pydantic.ValidationError as err:
-            err_msg = [f'{error["loc"][0]} = {error["input"]}: {error["msg"]}' for error in err.errors()]
+            err_msg = [
+                f'{error["loc"][0]} = {error["input"]}: {error["msg"]}' for error in err.errors()
+            ]
             logger.error("Found config error: %s", err_msg)
             raise ConfigurationError(f"Config error: {err_msg}") from err
 

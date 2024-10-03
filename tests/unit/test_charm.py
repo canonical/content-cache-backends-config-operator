@@ -10,7 +10,7 @@ import pytest
 from ops.testing import Harness
 
 import state
-from charm import CONFIG_INTEGRATION_NAME, ContentCacheBackendsConfigCharm
+from charm import CACHE_CONFIG_INTEGRATION_NAME, ContentCacheBackendsConfigCharm
 
 SAMPLE_CONFIG = {
     state.LOCATION_CONFIG_NAME: "example.com",
@@ -56,6 +56,7 @@ def test_integration_config_missing(charm: ContentCacheBackendsConfigCharm, even
 
     assert isinstance(charm.unit.status, ops.BlockedStatus)
 
+
 @pytest.mark.parametrize(
     "event",
     [
@@ -63,7 +64,9 @@ def test_integration_config_missing(charm: ContentCacheBackendsConfigCharm, even
         pytest.param("_on_cache_config_relation_changed", id="config_relation_changed"),
     ],
 )
-def test_integration_data_not_leader(charm: ContentCacheBackendsConfigCharm, harness: Harness, event: str):
+def test_integration_data_not_leader(
+    charm: ContentCacheBackendsConfigCharm, harness: Harness, event: str
+):
     """
     arrange: Follow unit with configurations and integration.
     act: Trigger events.
@@ -73,7 +76,7 @@ def test_integration_data_not_leader(charm: ContentCacheBackendsConfigCharm, har
     harness.update_config(SAMPLE_CONFIG)
 
     relation_id = harness.add_relation(
-        CONFIG_INTEGRATION_NAME,
+        CACHE_CONFIG_INTEGRATION_NAME,
         remote_app="content-cache",
     )
     harness.add_relation_unit(relation_id, remote_unit_name="content-cache/0")
@@ -82,7 +85,7 @@ def test_integration_data_not_leader(charm: ContentCacheBackendsConfigCharm, har
     getattr(charm, event)(mock_event)
 
     data = harness.get_relation_data(relation_id, app_or_unit=charm.app.name)
-    assert charm.unit.status == ops.BlockedStatus('Waiting for integration')
+    assert charm.unit.status == ops.BlockedStatus("Waiting for integration")
     assert data == {}
 
 
@@ -102,7 +105,7 @@ def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harne
     harness.update_config(SAMPLE_CONFIG)
 
     relation_id = harness.add_relation(
-        CONFIG_INTEGRATION_NAME,
+        CACHE_CONFIG_INTEGRATION_NAME,
         remote_app="content-cache",
     )
     harness.add_relation_unit(relation_id, remote_unit_name="content-cache/0")
@@ -118,6 +121,7 @@ def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harne
         "protocol": "https",
     }
 
+
 @pytest.mark.parametrize(
     "is_leader",
     [
@@ -125,7 +129,9 @@ def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harne
         pytest.param(False, id="follower"),
     ],
 )
-def test_integration_removed(harness: Harness, charm: ContentCacheBackendsConfigCharm, is_leader: bool):
+def test_integration_removed(
+    harness: Harness, charm: ContentCacheBackendsConfigCharm, is_leader: bool
+):
     """
     arrange: Unit with integration.
     act: Remove integration.
@@ -135,11 +141,11 @@ def test_integration_removed(harness: Harness, charm: ContentCacheBackendsConfig
     harness.update_config(SAMPLE_CONFIG)
 
     relation_id = harness.add_relation(
-        CONFIG_INTEGRATION_NAME,
+        CACHE_CONFIG_INTEGRATION_NAME,
         remote_app="content-cache",
     )
     harness.add_relation_unit(relation_id, remote_unit_name="content-cache/0")
-    
+
     harness.remove_relation(relation_id)
-    
-    assert charm.unit.status == ops.BlockedStatus('Waiting for integration')
+
+    assert charm.unit.status == ops.BlockedStatus("Waiting for integration")
