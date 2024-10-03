@@ -14,7 +14,7 @@ from state import Configuration
 
 logger = logging.getLogger(__name__)
 
-CONFIG_INTEGRATION_NAME = "config"
+CONFIG_INTEGRATION_NAME = "cache-config"
 
 
 class ContentCacheBackendsConfigCharm(ops.CharmBase):
@@ -31,7 +31,7 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
         framework.observe(self.on.config_changed, self._on_config_changed)
         framework.observe(
             self.on[CONFIG_INTEGRATION_NAME].relation_changed,
-            self._on_config_relation_changed,
+            self._on_cache_config_relation_changed,
         )
 
     def _on_start(self, _: ops.StartEvent) -> None:
@@ -42,7 +42,7 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
         """Handle config changed event."""
         self._load_integration_data()
 
-    def _on_config_relation_changed(self, _: ops.RelationChangedEvent) -> None:
+    def _on_cache_config_relation_changed(self, _: ops.RelationChangedEvent) -> None:
         """Handle config relation changed event."""
         self._load_integration_data()
 

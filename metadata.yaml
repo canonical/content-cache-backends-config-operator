@@ -29,7 +29,7 @@ description: |
   information see the Content Cache charm.
 
 requires:
-  config:
+  cache-config:
     interface: content-cache-config
     scope: container
     limit: 1

@@ -43,7 +43,7 @@ def test_config_config(charm: ContentCacheBackendsConfigCharm, harness: Harness)
     "event",
     [
         pytest.param("_on_config_changed", id="config_changed"),
-        pytest.param("_on_config_relation_changed", id="config_relation_changed"),
+        pytest.param("_on_cache_config_relation_changed", id="config_relation_changed"),
     ],
 )
 def test_integration_config_missing(charm: ContentCacheBackendsConfigCharm, event: str):
@@ -62,7 +62,7 @@ def test_integration_config_missing(charm: ContentCacheBackendsConfigCharm, even
     "event",
     [
         pytest.param("_on_config_changed", id="config_changed"),
-        pytest.param("_on_config_relation_changed", id="config_relation_changed"),
+        pytest.param("_on_cache_config_relation_changed", id="config_relation_changed"),
     ],
 )
 def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harness, event: str):
