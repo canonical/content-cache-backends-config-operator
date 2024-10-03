@@ -3,6 +3,7 @@
 
 """The charm state and configurations."""
 
+import enum
 import json
 import logging
 import typing
@@ -14,12 +15,13 @@ from errors import ConfigurationError
 
 logger = logging.getLogger(__name__)
 
-HTTP_PROTOCOL_NAME = "http"
-HTTPS_PROTOCOL_NAME = "https"
 LOCATION_CONFIG_NAME = "location"
 BACKENDS_CONFIG_NAME = "backends"
 PROTOCOL_CONFIG_NAME = "protocol"
 
+class Protocol(str, enum.Enum):
+    HTTP = "http"
+    HTTPS = "https"
 
 class Configuration(pydantic.BaseModel):
     """Represents the configuration.
@@ -31,46 +33,9 @@ class Configuration(pydantic.BaseModel):
             https.
     """
 
-    location: str
+    location: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
     backends: tuple[pydantic.IPvAnyAddress, ...]
-    protocol: str
-
-    @pydantic.field_validator("protocol")
-    @classmethod
-    def valid_protocol(cls, value: str) -> str:
-        """Validate the protocol field.
-
-        Args:
-            value: The value to validate.
-
-        Raises:
-            ConfigurationError: Invalid value found.
-
-        Return:
-            The validated value.
-        """
-        value = value.lower()
-        if value not in (HTTP_PROTOCOL_NAME, HTTPS_PROTOCOL_NAME):
-            raise ConfigurationError(f"Unknown protocol {value}")
-        return value
-
-    @pydantic.field_validator("location")
-    @classmethod
-    def valid_location(cls, value: str) -> str:
-        """Validate the location field.
-
-        Args:
-            value: The value to validate.
-
-        Raises:
-            ConfigurationError: Invalid value found.
-
-        Return:
-            The validated value.
-        """
-        if not value:
-            raise ConfigurationError("Empty location configuration found")
-        return value
+    protocol: Protocol
 
     @classmethod
     def from_charm(cls, charm: ops.CharmBase) -> "Configuration":
@@ -96,7 +61,8 @@ class Configuration(pydantic.BaseModel):
             # Pydantic allows converting str to IPvAnyAddress.
             return cls(location=location, backends=backends, protocol=protocol)  # type: ignore
         except pydantic.ValidationError as err:
-            err_msg = [f'{error["input"]}: {error["msg"]}' for error in err.errors()]
+            err_msg = [f'{error["loc"][0]} = {error["input"]}: {error["msg"]}' for error in err.errors()]
+            logger.error("Found config error: %s", err_msg)
             raise ConfigurationError(f"Config error: {err_msg}") from err
 
     def to_integration_data(self) -> dict[str, str]:

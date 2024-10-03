@@ -42,7 +42,7 @@ def test_empty_location():
 
     with pytest.raises(ConfigurationError) as err:
         Configuration.from_charm(charm)
-    assert str(err.value) == "Empty location configuration found"
+    assert str(err.value) == "Config error: ['location = : String should have at least 1 character']"
 
 
 @pytest.mark.parametrize(
@@ -51,12 +51,12 @@ def test_empty_location():
         pytest.param("", "Empty backends configuration found", id="empty backends"),
         pytest.param(
             "mock",
-            "Config error: ['mock: value is not a valid IPv4 or IPv6 address']",
+            "Config error: ['backends = mock: value is not a valid IPv4 or IPv6 address']",
             id="incorrect backends format",
         ),
         pytest.param(
             "10.10.1",
-            "Config error: ['10.10.1: value is not a valid IPv4 or IPv6 address']",
+            "Config error: ['backends = 10.10.1: value is not a valid IPv4 or IPv6 address']",
             id="incorrect IP format",
         ),
     ],
@@ -88,7 +88,7 @@ def test_config_protocol_invalid():
     with pytest.raises(ConfigurationError) as err:
         Configuration.from_charm(charm)
 
-    assert str(err.value) == "Unknown protocol unknown"
+    assert str(err.value) == "Config error: [\"protocol = unknown: Input should be 'http' or 'https'\"]"
 
 
 def test_configuration_to_dict():
