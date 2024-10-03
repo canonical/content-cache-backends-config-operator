@@ -6,7 +6,7 @@
 from ipaddress import IPv4Address
 
 import pytest
-from factories import MockCharmFactory
+from factories import MockCharmFactory  # pylint: disable=import-error
 
 from errors import ConfigurationError
 from src.state import (

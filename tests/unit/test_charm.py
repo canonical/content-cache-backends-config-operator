@@ -20,12 +20,17 @@ SAMPLE_CONFIG = {
 
 
 def test_start(charm: ContentCacheBackendsConfigCharm):
+    """
+    arrange: A working charm.
+    act: The charm started.
+    assert: Charm in block state.
+    """
     assert charm.unit.status == ops.BlockedStatus("Waiting for configurations.")
 
 
 def test_config_config(charm: ContentCacheBackendsConfigCharm, harness: Harness):
     """
-    arrange: Charm with no integration setup.
+    arrange: Charm with no integration.
     act: Update the configuration with valid values.
     assert: The charm in active status.
     """
@@ -41,9 +46,12 @@ def test_config_config(charm: ContentCacheBackendsConfigCharm, harness: Harness)
         pytest.param("_on_config_relation_changed", id="config_relation_changed"),
     ],
 )
-def test_integration_config_missing(
-    charm: ContentCacheBackendsConfigCharm, harness: Harness, event: str
-):
+def test_integration_config_missing(charm: ContentCacheBackendsConfigCharm, event: str):
+    """
+    arrange: Charm with no integration.
+    act: Trigger events.
+    assert: Charm in block state.
+    """
     mock_event = MagicMock()
     getattr(charm, event)(mock_event)
 
@@ -58,6 +66,11 @@ def test_integration_config_missing(
     ],
 )
 def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harness, event: str):
+    """
+    arrange: Charm with configurations and integration.
+    act: Trigger events.
+    assert: The configuration is in the databag.
+    """
     harness.update_config(SAMPLE_CONFIG)
 
     relation_id = harness.add_relation(
