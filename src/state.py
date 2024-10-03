@@ -22,7 +22,14 @@ PROTOCOL_CONFIG_NAME = "protocol"
 
 
 class Configuration(pydantic.BaseModel):
-    """Represents the configuration."""
+    """Represents the configuration.
+
+    Attributes:
+        location: Defines what URL to match for this set of configuration.
+        backends: The backends for this set of configuration.
+        protocol: The protocol to request the backends with. Can be http or
+            https.
+    """
 
     location: str
     backends: tuple[pydantic.IPvAnyAddress, ...]
@@ -31,14 +38,36 @@ class Configuration(pydantic.BaseModel):
     @pydantic.field_validator("protocol")
     @classmethod
     def valid_protocol(cls, value: str) -> str:
+        """Validate the protocol field.
+
+        Args:
+            value: The value to validate.
+
+        Raises:
+            ConfigurationError: Invalid value found.
+
+        Return:
+            The validated value.
+        """
         value = value.lower()
         if value not in (HTTP_PROTOCOL_NAME, HTTPS_PROTOCOL_NAME):
-            raise ConfigurationError(f"Unknown protocol {value} in backends configuration")
+            raise ConfigurationError(f"Unknown protocol {value}")
         return value
 
     @pydantic.field_validator("location")
     @classmethod
     def valid_location(cls, value: str) -> str:
+        """Validate the location field.
+
+        Args:
+            value: The value to validate.
+
+        Raises:
+            ConfigurationError: Invalid value found.
+
+        Return:
+            The validated value.
+        """
         if not value:
             raise ConfigurationError("Empty location configuration found")
         return value
@@ -49,6 +78,9 @@ class Configuration(pydantic.BaseModel):
 
         Args:
             charm: The charm containing the configuration.
+
+        Raises:
+            ConfigurationError: Error with the charm configuration.
 
         Returns:
             The object.
@@ -61,7 +93,8 @@ class Configuration(pydantic.BaseModel):
 
         backends = tuple(ip.strip() for ip in backends_str.split(","))
         try:
-            return cls(location=location, backends=backends, protocol=protocol)
+            # Pydantic allows converting str to IPvAnyAddress.
+            return cls(location=location, backends=backends, protocol=protocol)  # type: ignore
         except pydantic.ValidationError as err:
             err_msg = [f'{error["input"]}: {error["msg"]}' for error in err.errors()]
             raise ConfigurationError(f"Config error: {err_msg}") from err

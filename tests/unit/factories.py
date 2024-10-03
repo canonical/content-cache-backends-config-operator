@@ -1,6 +1,8 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+"""Factory for mocks."""
+
 import typing
 from unittest.mock import MagicMock
 
@@ -10,12 +12,17 @@ from src.state import BACKENDS_CONFIG_NAME, LOCATION_CONFIG_NAME, PROTOCOL_CONFI
 
 T = typing.TypeVar("T")
 
+# The factory-boy usage results in no public methods.
+# pylint: disable=too-few-public-methods
+
+# Disable DCO060 docstring attribute check, as mock does not need these.
+
 
 class MockUnitFactory(factory.Factory):
-    """Mock charm unit."""
+    """Mock charm unit."""  # noqa: DCO060
 
     class Meta:
-        """Configuration for factory."""
+        """Configuration for factory."""  # noqa: DCO060
 
         model = MagicMock
 
@@ -23,10 +30,10 @@ class MockUnitFactory(factory.Factory):
 
 
 class MockCharmFactory(factory.Factory):
-    """Mock the content-cache-backend-config charm."""
+    """Mock the content-cache-backend-config charm."""  # noqa: DCO060
 
     class Meta:
-        """Configuration for the factory."""
+        """Configuration for the factory."""  # noqa: DCO060
 
         model = MagicMock
 

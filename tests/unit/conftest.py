@@ -14,7 +14,8 @@ def harness_fixture():
     """The ops testing harness fixture."""
     harness = Harness(ContentCacheBackendsConfigCharm)
     harness.begin_with_initial_hooks()
-    return harness
+    yield harness
+    harness.cleanup()
 
 
 @pytest.fixture(name="charm", scope="function")

@@ -21,7 +21,11 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
     """Charm the application."""
 
     def __init__(self, framework: ops.Framework) -> None:
-        """Initialize the object."""
+        """Initialize the object.
+
+        Args:
+            framework: The ops framework.
+        """
         super().__init__(framework)
         framework.observe(self.on.start, self._on_start)
         framework.observe(self.on.config_changed, self._on_config_changed)

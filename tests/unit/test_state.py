@@ -1,14 +1,20 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+"""Unit test for the state.py"""
+
 from ipaddress import IPv4Address
 
 import pytest
 from factories import MockCharmFactory
 
 from errors import ConfigurationError
-from src.state import PROTOCOL_CONFIG_NAME
-from state import BACKENDS_CONFIG_NAME, LOCATION_CONFIG_NAME, Configuration
+from src.state import (
+    BACKENDS_CONFIG_NAME,
+    LOCATION_CONFIG_NAME,
+    PROTOCOL_CONFIG_NAME,
+    Configuration,
+)
 
 
 def test_valid_config():
@@ -44,8 +50,8 @@ def test_empty_location():
     [
         pytest.param("", "Empty backends configuration found", id="empty backends"),
         pytest.param(
-            "asdf",
-            "Config error: ['asdf: value is not a valid IPv4 or IPv6 address']",
+            "mock",
+            "Config error: ['mock: value is not a valid IPv4 or IPv6 address']",
             id="incorrect backends format",
         ),
         pytest.param(
@@ -77,12 +83,12 @@ def test_config_protocol_invalid():
     assert: Configuration error raised with a correct error message.
     """
     charm = MockCharmFactory()
-    charm.config[PROTOCOL_CONFIG_NAME] = "asdf"
+    charm.config[PROTOCOL_CONFIG_NAME] = "unknown"
 
     with pytest.raises(ConfigurationError) as err:
         Configuration.from_charm(charm)
 
-    assert str(err.value) == "Unknown protocol asdf in backends configuration"
+    assert str(err.value) == "Unknown protocol unknown"
 
 
 def test_configuration_to_dict():
