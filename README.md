@@ -8,18 +8,16 @@ Avoid using this README file for information that is maintained or published els
 Use links instead.
 -->
 
-# is-charms-template
+# Content Cache Backends Config Charm
 
-Charmhub package name: operator-template
-More information: https://charmhub.io/is-charms-template
+Charmhub package name: content-cache-backends-config
+More information: https://charmhub.io/content-cache-backends-config
 
-Describe your charm in one or two sentences.
+This charm is a subordinate charm to the Content Cache charm. This charm should be integrated with the Content Cache charm to inject the charm configuration of this charm. For more information see the Content Cache charm.
 
 ## Other resources
 
 <!-- If your charm is documented somewhere else other than Charmhub, provide a link separately. -->
-
-- [Read more](https://example.com)
 
 - [Contributing](CONTRIBUTING.md) <!-- or link to other contribution documentation -->
 
