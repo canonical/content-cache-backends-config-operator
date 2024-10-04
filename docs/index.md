@@ -1,5 +1,7 @@
 # Content Cache Backends Config Operator
 
+NOTES: This charm works with the a WIP content-cache charm rewrite. This charm does not work with the current content-cache charm.
+
 <!-- A single sentence that says what the product is, succinctly and memorably. Add a 1-2 sentence description of what the charm software does. -->
 
 This charm is a subordinate charm to the Content Cache charm. This charm should be integrated with the Content Cache charm to inject the charm configuration of this charm. For more information see the [Content Cache charm](https://charmhub.io/content-cache).
