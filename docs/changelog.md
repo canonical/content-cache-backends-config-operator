@@ -3,3 +3,4 @@
 ## 2024-10-07
 
 - Added a changelog for tracking user-relevant changes.
+- Added location, backends, protocol charm configurations.
