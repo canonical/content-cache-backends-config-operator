@@ -6,6 +6,7 @@
 import enum
 import json
 import logging
+import re
 import typing
 
 import ops
@@ -44,12 +45,52 @@ class Configuration(pydantic.BaseModel):
             https.
     """
 
-    hostname: typing.Annotated[
-        str, pydantic.StringConstraints(min_length=1)
-    ]
+    hostname: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
     path: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
     backends: tuple[pydantic.IPvAnyAddress, ...]
     protocol: Protocol
+
+    @pydantic.field_validator("hostname")
+    @classmethod
+    def validate_hostname(cls, value: str) -> str:
+        """Validate the hostname.
+
+        Args:
+            value: The value to validate.
+
+        Returns:
+            The value after validation.
+        """
+        if len(value) > 255:
+            raise ValueError("Hostname cannot be longer than 255")
+
+        valid_segment = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+        for segment in value.split("."):
+            if valid_segment.fullmatch(segment) is None:
+                raise ValueError(
+                    "Each Hostname segment must be less than 64 in length, and consist of alphanumeric and hyphen"
+                )
+
+        return value
+
+    @pydantic.field_validator("path")
+    @classmethod
+    def validate_path(cls, value: str) -> str:
+        """Validate the path.
+
+        Args:
+            value: The value to validate.
+
+        Returns:
+            The value after validation.
+        """
+        # This are the valid characters for path in addition to `/`:
+        # a-z A-Z 0-9 . - _ ~ ! $ & ' ( ) * + , ; = : @
+        # https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
+        valid_path = re.compile("[/A-Z\d.\-_~!$&'()*+,;=:@]+", re.IGNORECASE)
+        if valid_path.fullmatch(value) is None:
+            raise ValueError("Path contains non-allowed character")
+        return value
 
     @classmethod
     def from_charm(cls, charm: ops.CharmBase) -> "Configuration":
@@ -90,7 +131,7 @@ class Configuration(pydantic.BaseModel):
 
     def to_integration_data(self) -> dict[str, str]:
         """Convert to format supported by integration.
-        
+
         Juju integration only supports data of dict[str, str] type.
         This method ensures the the values in the dict are all str type.
 

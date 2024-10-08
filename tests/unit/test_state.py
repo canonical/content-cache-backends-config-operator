@@ -49,6 +49,36 @@ def test_empty_hostname():
     )
 
 
+def test_long_hostname():
+    """
+    arrange: Mock charm with long hostname.
+    act: Create the configuration from the charm.
+    assert: Correct configurations from the mock charm.
+    """
+    charm = MockCharmFactory()
+    charm.config[HOSTNAME_CONFIG_NAME] = "a" * 256
+
+    with pytest.raises(ConfigurationError) as err:
+        Configuration.from_charm(charm)
+
+    assert "Value error, Hostname cannot be longer than 255" in str(err.value)
+
+
+def test_invalid_hostname():
+    """
+    arrange: Mock charm with hostname with invalid character.
+    act: Create the configuration from the charm.
+    assert: Correct configurations from the mock charm.
+    """
+    charm = MockCharmFactory()
+    charm.config[HOSTNAME_CONFIG_NAME] = "example?.com"
+
+    with pytest.raises(ConfigurationError) as err:
+        Configuration.from_charm(charm)
+
+    assert "consist of alphanumeric and hyphen" in str(err.value)
+
+
 def test_empty_path():
     """
     arrange: Mock charm with empty path.
@@ -61,6 +91,24 @@ def test_empty_path():
     with pytest.raises(ConfigurationError) as err:
         Configuration.from_charm(charm)
     assert str(err.value) == "Config error: ['path = : String should have at least 1 character']"
+
+
+def test_invalid_path():
+    """
+    arrange: Mock charm with path with invalid character.
+    act: Create the configuration from the charm.
+    assert: Correct configurations from the mock charm.
+    """
+    charm = MockCharmFactory()
+    charm.config[PATH_CONFIG_NAME] = "/^"
+
+    with pytest.raises(ConfigurationError) as err:
+        Configuration.from_charm(charm)
+
+    assert (
+        str(err.value)
+        == "Config error: ['path = /^: Value error, Path contains non-allowed character']"
+    )
 
 
 @pytest.mark.parametrize(
