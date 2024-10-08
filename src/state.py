@@ -90,6 +90,9 @@ class Configuration(pydantic.BaseModel):
 
     def to_integration_data(self) -> dict[str, str]:
         """Convert to format supported by integration.
+        
+        Juju integration only supports data of dict[str, str] type.
+        This method ensures the the values in the dict are all str type.
 
         Returns:
             The data in the format accepted by integrations.
