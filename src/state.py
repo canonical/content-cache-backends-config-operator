@@ -45,9 +45,9 @@ class Configuration(pydantic.BaseModel):
     """
 
     hostname: typing.Annotated[
-        str, pydantic.StringConstraints(strip_whitespace=True, min_length=1)
+        str, pydantic.StringConstraints(min_length=1)
     ]
-    path: typing.Annotated[str, pydantic.StringConstraints(strip_whitespace=True, min_length=1)]
+    path: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
     backends: tuple[pydantic.IPvAnyAddress, ...]
     protocol: Protocol
 
