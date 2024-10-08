@@ -15,7 +15,8 @@ from errors import ConfigurationError
 
 logger = logging.getLogger(__name__)
 
-LOCATION_CONFIG_NAME = "location"
+HOSTNAME_CONFIG_NAME = "hostname"
+PATH_CONFIG_NAME = "path"
 BACKENDS_CONFIG_NAME = "backends"
 PROTOCOL_CONFIG_NAME = "protocol"
 
@@ -36,13 +37,17 @@ class Configuration(pydantic.BaseModel):
     """Represents the configuration.
 
     Attributes:
-        location: Defines what URL to match for this set of configuration.
+        hostname: The hostname for the virtual host for this set of configuration.
+        path: The path for this set of configuration.
         backends: The backends for this set of configuration.
         protocol: The protocol to request the backends with. Can be http or
             https.
     """
 
-    location: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
+    hostname: typing.Annotated[
+        str, pydantic.StringConstraints(strip_whitespace=True, min_length=1)
+    ]
+    path: typing.Annotated[str, pydantic.StringConstraints(strip_whitespace=True, min_length=1)]
     backends: tuple[pydantic.IPvAnyAddress, ...]
     protocol: Protocol
 
@@ -59,7 +64,8 @@ class Configuration(pydantic.BaseModel):
         Returns:
             The object.
         """
-        location = typing.cast(str, charm.config.get(LOCATION_CONFIG_NAME, "")).strip()
+        hostname = typing.cast(str, charm.config.get(HOSTNAME_CONFIG_NAME, "")).strip()
+        path = typing.cast(str, charm.config.get(PATH_CONFIG_NAME, "")).strip()
         protocol = typing.cast(str, charm.config.get(PROTOCOL_CONFIG_NAME, "")).lower().strip()
         backends_str = typing.cast(str, charm.config.get(BACKENDS_CONFIG_NAME, "")).strip()
         if not backends_str:
@@ -67,8 +73,14 @@ class Configuration(pydantic.BaseModel):
 
         backends = tuple(ip.strip() for ip in backends_str.split(","))
         try:
-            # Pydantic allows converting str to IPvAnyAddress.
-            return cls(location=location, backends=backends, protocol=protocol)  # type: ignore
+            return cls(
+                hostname=hostname,
+                path=path,
+                # Pydantic allows converting str to IPvAnyAddress.
+                backends=backends,  # type: ignore
+                # Pydantic allows converting str to a string enum.
+                protocol=protocol,  # type: ignore
+            )
         except pydantic.ValidationError as err:
             err_msg = [
                 f'{error["loc"][0]} = {error["input"]}: {error["msg"]}' for error in err.errors()

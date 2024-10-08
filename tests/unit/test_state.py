@@ -11,7 +11,8 @@ from factories import MockCharmFactory  # pylint: disable=import-error
 from errors import ConfigurationError
 from src.state import (
     BACKENDS_CONFIG_NAME,
-    LOCATION_CONFIG_NAME,
+    HOSTNAME_CONFIG_NAME,
+    PATH_CONFIG_NAME,
     PROTOCOL_CONFIG_NAME,
     Configuration,
 )
@@ -26,25 +27,40 @@ def test_valid_config():
     charm = MockCharmFactory()
 
     config = Configuration.from_charm(charm)
-    assert config.location == "example.com"
+    assert config.hostname == "example.com"
+    assert config.path == "/"
     assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
     assert config.protocol == "https"
 
 
-def test_empty_location():
+def test_empty_hostname():
     """
-    arrange: Mock charm with valid configurations.
+    arrange: Mock charm with empty hostname.
     act: Create the configuration from the charm.
     assert: Correct configurations from the mock charm.
     """
     charm = MockCharmFactory()
-    charm.config[LOCATION_CONFIG_NAME] = "   "
+    charm.config[HOSTNAME_CONFIG_NAME] = "   "
 
     with pytest.raises(ConfigurationError) as err:
         Configuration.from_charm(charm)
     assert (
-        str(err.value) == "Config error: ['location = : String should have at least 1 character']"
+        str(err.value) == "Config error: ['hostname = : String should have at least 1 character']"
     )
+
+
+def test_empty_path():
+    """
+    arrange: Mock charm with empty path.
+    act: Create the configuration from the charm.
+    assert: Correct configurations from the mock charm.
+    """
+    charm = MockCharmFactory()
+    charm.config[PATH_CONFIG_NAME] = "   "
+
+    with pytest.raises(ConfigurationError) as err:
+        Configuration.from_charm(charm)
+    assert str(err.value) == "Config error: ['path = : String should have at least 1 character']"
 
 
 @pytest.mark.parametrize(
@@ -107,7 +123,8 @@ def test_configuration_to_dict():
     config = Configuration.from_charm(charm)
     data = config.to_integration_data()
     assert data == {
-        "location": "example.com",
+        "hostname": "example.com",
+        "path": "/",
         "backends": '["10.10.1.1", "10.10.2.2"]',
         "protocol": "https",
     }

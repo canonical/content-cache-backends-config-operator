@@ -13,7 +13,8 @@ import state
 from charm import CACHE_CONFIG_INTEGRATION_NAME, ContentCacheBackendsConfigCharm
 
 SAMPLE_CONFIG = {
-    state.LOCATION_CONFIG_NAME: "example.com",
+    state.HOSTNAME_CONFIG_NAME: "example.com",
+    state.PATH_CONFIG_NAME: "/",
     state.BACKENDS_CONFIG_NAME: "10.10.1.1,10.1.1.2",
     state.PROTOCOL_CONFIG_NAME: "https",
 }
@@ -116,7 +117,8 @@ def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harne
     data = harness.get_relation_data(relation_id, app_or_unit=charm.app.name)
     assert charm.unit.status == ops.ActiveStatus()
     assert data == {
-        "location": "example.com",
+        "hostname": "example.com",
+        "path": "/",
         "backends": '["10.10.1.1", "10.1.1.2"]',
         "protocol": "https",
     }
