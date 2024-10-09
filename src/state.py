@@ -96,7 +96,7 @@ class Configuration(pydantic.BaseModel):
         # This are the valid characters for path in addition to `/`:
         # a-z A-Z 0-9 . - _ ~ ! $ & ' ( ) * + , ; = : @
         # https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
-        valid_path = re.compile(r"[/A-Z0-9.\-_~!$&'()*+,;=:@]+", re.IGNORECASE)
+        valid_path = re.compile(r"[/\w.\-~!$&'()*+,;=:@]+", re.IGNORECASE)
         if valid_path.fullmatch(value) is None:
             raise ValueError("Path contains non-allowed character")
         return value
