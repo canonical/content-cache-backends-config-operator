@@ -58,17 +58,23 @@ class Configuration(pydantic.BaseModel):
         Args:
             value: The value to validate.
 
+        Raises:
+            ValueError: The validation failed.
+
         Returns:
             The value after validation.
         """
         if len(value) > 255:
             raise ValueError("Hostname cannot be longer than 255")
 
-        valid_segment = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+        valid_segment = re.compile(r"(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
         for segment in value.split("."):
             if valid_segment.fullmatch(segment) is None:
                 raise ValueError(
-                    "Each Hostname segment must be less than 64 in length, and consist of alphanumeric and hyphen"
+                    (
+                        "Each Hostname segment must be less than 64 in length, and consist of "
+                        "alphanumeric and hyphen"
+                    )
                 )
 
         return value
@@ -81,13 +87,16 @@ class Configuration(pydantic.BaseModel):
         Args:
             value: The value to validate.
 
+        Raises:
+            ValueError: The validation failed.
+
         Returns:
             The value after validation.
         """
         # This are the valid characters for path in addition to `/`:
         # a-z A-Z 0-9 . - _ ~ ! $ & ' ( ) * + , ; = : @
         # https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
-        valid_path = re.compile("[/A-Z\d.\-_~!$&'()*+,;=:@]+", re.IGNORECASE)
+        valid_path = re.compile(r"[/A-Z0-9.\-_~!$&'()*+,;=:@]+", re.IGNORECASE)
         if valid_path.fullmatch(value) is None:
             raise ValueError("Path contains non-allowed character")
         return value
