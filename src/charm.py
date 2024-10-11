@@ -89,4 +89,4 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    ops.main(ContentCacheBackendsConfigCharm)  # type: ignore
+    ops.main(ContentCacheBackendsConfigCharm)
