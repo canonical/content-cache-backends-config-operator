@@ -11,6 +11,7 @@ import typing
 
 import ops
 import pydantic
+import pydantic_core
 
 from errors import ConfigurationError
 
@@ -144,12 +145,28 @@ class Configuration(pydantic.BaseModel):
         Juju integration only supports data of dict[str, str] type.
         This method ensures the the values in the dict are all str type.
 
+        Raises:
+            ConfigurationError: Unable to convert to integration data format.
+
         Returns:
             The data in the format accepted by integrations.
         """
-        data = json.loads(self.model_dump_json())
+        try:
+            data = json.loads(self.model_dump_json())
+        except pydantic_core.PydanticSerializationError as err:  #
+            logger.exception("Failed to convert configuration to json")
+            raise ConfigurationError(
+                "Unable to convert configuration to integration data format"
+            ) from err
+
         for key, value in data.items():
             if isinstance(value, str):
                 continue
-            data[key] = json.dumps(value)
+            try:
+                data[key] = json.dumps(value)
+            except (ValueError, TypeError) as err:
+                logger.exception("Failed to convert configuration to integration data format")
+                raise ConfigurationError(
+                    "Unable to convert configuration to integration data format"
+                ) from err
         return data

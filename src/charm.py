@@ -62,6 +62,7 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
         logger.info("Loading configuration")
         try:
             config = Configuration.from_charm(self)
+            data = config.to_integration_data()
         except ConfigurationError as err:
             logger.error("Configuration error: %s", err)
             self.unit.status = ops.BlockedStatus(str(err))
@@ -69,7 +70,7 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
 
         logger.info("Setting integration data")
         rel = self.model.relations[CACHE_CONFIG_INTEGRATION_NAME][0]
-        rel.data[self.app].update(config.to_integration_data())
+        rel.data[self.app].update(data)
         logger.info("Integration data set")
 
     def _leader_set_status(self) -> bool:
