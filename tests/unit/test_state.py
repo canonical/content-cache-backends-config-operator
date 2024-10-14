@@ -33,6 +33,37 @@ def test_valid_config():
     assert config.protocol == "https"
 
 
+def test_subdomain_hostname():
+    """
+    arrange: Mock charm with valid configurations.
+    act: Create the configuration from the charm.
+    assert: Correct configurations from the mock charm.
+    """
+    charm = MockCharmFactory()
+
+    config = Configuration.from_charm(charm)
+    assert config.hostname == "example.com"
+    assert config.path == "/"
+    assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
+    assert config.protocol == "https"
+
+
+def test_hostname_with_subdomain():
+    """
+    arrange: Mock charm with valid configurations.
+    act: Use a domain with subdomain as hostname, and create the configuration from the charm.
+    assert: Correct configurations from the mock charm.
+    """
+    charm = MockCharmFactory()
+    charm.config[HOSTNAME_CONFIG_NAME] = "sub.example.com"
+
+    config = Configuration.from_charm(charm)
+    assert config.hostname == "sub.example.com"
+    assert config.path == "/"
+    assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
+    assert config.protocol == "https"
+
+
 def test_empty_hostname():
     """
     arrange: Mock charm with empty hostname.

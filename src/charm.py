@@ -40,7 +40,7 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
 
     def _on_start(self, _: ops.StartEvent) -> None:
         """Handle start event."""
-        self._set_status()
+        self._leader_set_status()
 
     def _on_config_changed(self, _: ops.ConfigChangedEvent) -> None:
         """Handle config changed event."""
@@ -52,12 +52,11 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
 
     def _on_cache_config_relation_broken(self, _: ops.RelationBrokenEvent) -> None:
         """Handle cache config relation broken event."""
-        self._set_status()
+        self._leader_set_status()
 
     def _load_integration_data(self) -> None:
         """Validate the configuration and load to integration."""
-        if not self.unit.is_leader():
-            logger.debug("Not leader: not setting the integration data")
+        if not self._leader_set_status():
             return
 
         logger.info("Loading configuration")
@@ -69,23 +68,28 @@ class ContentCacheBackendsConfigCharm(ops.CharmBase):
             return
 
         logger.info("Setting integration data")
-        if self.model.relations[CACHE_CONFIG_INTEGRATION_NAME]:
-            rel = self.model.relations[CACHE_CONFIG_INTEGRATION_NAME][0]
-            rel.data[self.app].update(config.to_integration_data())
+        rel = self.model.relations[CACHE_CONFIG_INTEGRATION_NAME][0]
+        rel.data[self.app].update(config.to_integration_data())
         logger.info("Integration data set")
-        self._set_status()
 
-    def _set_status(self) -> None:
-        """Set the charm status."""
+    def _leader_set_status(self) -> bool:
+        """Set the charm status.
+
+        Returns:
+            Whether the unit is leader and ready.
+        """
         if not self.unit.is_leader():
-            logger.debug("Not leader: not setting the status")
-            return
+            logger.debug("Not leader: not setting the application status")
+            self.unit.status = ops.ActiveStatus()
+            return False
 
         if not self.model.relations[CACHE_CONFIG_INTEGRATION_NAME]:
             logger.info("No integration found")
             self.unit.status = ops.BlockedStatus("Waiting for integration")
-            return
+            return False
+
         self.unit.status = ops.ActiveStatus()
+        return True
 
 
 if __name__ == "__main__":  # pragma: nocover

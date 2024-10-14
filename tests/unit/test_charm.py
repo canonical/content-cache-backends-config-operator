@@ -12,6 +12,9 @@ from ops.testing import Harness
 import state
 from charm import CACHE_CONFIG_INTEGRATION_NAME, ContentCacheBackendsConfigCharm
 
+# Test might need to access private methods.
+# pylint: disable=protected-access
+
 SAMPLE_CONFIG = {
     state.HOSTNAME_CONFIG_NAME: "example.com",
     state.PATH_CONFIG_NAME: "/",
@@ -86,7 +89,7 @@ def test_integration_data_not_leader(
     getattr(charm, event)(mock_event)
 
     data = harness.get_relation_data(relation_id, app_or_unit=charm.app.name)
-    assert charm.unit.status == ops.BlockedStatus("Waiting for integration")
+    assert charm.unit.status == ops.ActiveStatus()
     assert data == {}
 
 
@@ -124,6 +127,22 @@ def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harne
     }
 
 
+def test_integration_with_invalid_config(charm: ContentCacheBackendsConfigCharm, harness: Harness):
+    """
+    arrange: Leader unit with integration.
+    act: Update the configuration to invalid value.
+    assert: The unit is in blocked status.
+    """
+    relation_id = harness.add_relation(
+        CACHE_CONFIG_INTEGRATION_NAME,
+        remote_app="content-cache",
+    )
+    harness.add_relation_unit(relation_id, remote_unit_name="content-cache/0")
+
+    harness.update_config({state.BACKENDS_CONFIG_NAME: ""})
+    assert charm.unit.status == ops.BlockedStatus("Empty backends configuration found")
+
+
 @pytest.mark.parametrize(
     "is_leader",
     [
@@ -147,7 +166,18 @@ def test_integration_removed(
         remote_app="content-cache",
     )
     harness.add_relation_unit(relation_id, remote_unit_name="content-cache/0")
+    # When integrating applications the relation changed should fire.
+    # https://juju.is/docs/sdk/relation-name-relation-changed-event#heading--emission-sequence
+    # However, the harness does not fire relation changed on empty data, so it is manually
+    # triggered here.
+    charm._on_cache_config_relation_changed(MagicMock())
+
+    assert charm.unit.status == ops.ActiveStatus()
 
     harness.remove_relation(relation_id)
 
-    assert charm.unit.status == ops.BlockedStatus("Waiting for integration")
+    if is_leader:
+        assert charm.unit.status == ops.BlockedStatus("Waiting for integration")
+        return
+    # follower unit is always active.
+    assert charm.unit.status == ops.ActiveStatus()
