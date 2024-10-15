@@ -59,48 +59,6 @@ def test_valid_config():
     assert config.proxy_cache_valid == '["200 302 1h", "404 1m"]'
 
 
-def test_http_protocol():
-    """
-    arrange: Mock charm with valid configurations.
-    act: Use a http as protocol, and create the configuration from the charm.
-    assert: Correct configurations from the mock charm.
-    """
-    charm = MockCharmFactory()
-    charm.config[PROTOCOL_CONFIG_NAME] = "http"
-
-    config = Configuration.from_charm(charm)
-    assert config.hostname == "example.com"
-    assert config.path == "/"
-    assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
-    assert config.protocol == "http"
-    assert config.health_check_path == "/"
-    assert config.health_check_interval == 30
-    assert config.backends_path == "/"
-    assert config.proxy_cache_valid == '["200 302 1h", "404 1m"]'
-
-
-def test_longer_path():
-    """
-    arrange: Mock charm with valid configurations.
-    act: Use a longer path, and create the configuration from the charm.
-    assert: Correct configurations from the mock charm.
-    """
-    charm = MockCharmFactory()
-    charm.config[PATH_CONFIG_NAME] = "/path/to/destination/0"
-    charm.config[HEALTH_CHECK_PATH_CONFIG_NAME] = "/path/to/destination/1"
-    charm.config[BACKENDS_PATH_CONFIG_NAME] = "/path/to/destination/2"
-
-    config = Configuration.from_charm(charm)
-    assert config.hostname == "example.com"
-    assert config.path == "/path/to/destination/0"
-    assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
-    assert config.protocol == "https"
-    assert config.health_check_path == "/path/to/destination/1"
-    assert config.health_check_interval == 30
-    assert config.backends_path == "/path/to/destination/2"
-    assert config.proxy_cache_valid == '["200 302 1h", "404 1m"]'
-
-
 def test_hostname_with_subdomain():
     """
     arrange: Mock charm with valid configurations.
@@ -165,6 +123,28 @@ def test_invalid_hostname():
         Configuration.from_charm(charm)
 
     assert "consist of alphanumeric and hyphen" in str(err.value)
+
+
+def test_longer_path():
+    """
+    arrange: Mock charm with valid configurations.
+    act: Use a longer path, and create the configuration from the charm.
+    assert: Correct configurations from the mock charm.
+    """
+    charm = MockCharmFactory()
+    charm.config[PATH_CONFIG_NAME] = "/path/to/destination/0"
+    charm.config[HEALTH_CHECK_PATH_CONFIG_NAME] = "/path/to/destination/1"
+    charm.config[BACKENDS_PATH_CONFIG_NAME] = "/path/to/destination/2"
+
+    config = Configuration.from_charm(charm)
+    assert config.hostname == "example.com"
+    assert config.path == "/path/to/destination/0"
+    assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
+    assert config.protocol == "https"
+    assert config.health_check_path == "/path/to/destination/1"
+    assert config.health_check_interval == 30
+    assert config.backends_path == "/path/to/destination/2"
+    assert config.proxy_cache_valid == '["200 302 1h", "404 1m"]'
 
 
 def test_empty_path():
@@ -263,6 +243,26 @@ def test_config_backends_invalid_backends(invalid_backends: str, error_message: 
         Configuration.from_charm(charm)
 
     assert str(err.value) == error_message
+
+
+def test_http_protocol():
+    """
+    arrange: Mock charm with valid configurations.
+    act: Use a http as protocol, and create the configuration from the charm.
+    assert: Correct configurations from the mock charm.
+    """
+    charm = MockCharmFactory()
+    charm.config[PROTOCOL_CONFIG_NAME] = "http"
+
+    config = Configuration.from_charm(charm)
+    assert config.hostname == "example.com"
+    assert config.path == "/"
+    assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
+    assert config.protocol == "http"
+    assert config.health_check_path == "/"
+    assert config.health_check_interval == 30
+    assert config.backends_path == "/"
+    assert config.proxy_cache_valid == '["200 302 1h", "404 1m"]'
 
 
 def test_config_protocol_invalid():
