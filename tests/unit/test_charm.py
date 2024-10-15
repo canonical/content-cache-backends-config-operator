@@ -3,6 +3,7 @@
 
 """Unit test for the charm."""
 
+from typing import Mapping
 from unittest.mock import MagicMock
 
 import ops
@@ -15,11 +16,20 @@ from charm import CACHE_CONFIG_INTEGRATION_NAME, ContentCacheBackendsConfigCharm
 # Test might need to access private methods.
 # pylint: disable=protected-access
 
-SAMPLE_CONFIG = {
+JujuConfigValue = str | int | float | bool
+JujuConfigKey = str
+JujuConfig = Mapping[JujuConfigKey, JujuConfigValue]
+
+
+SAMPLE_CONFIG: JujuConfig = {
     state.HOSTNAME_CONFIG_NAME: "example.com",
     state.PATH_CONFIG_NAME: "/",
     state.BACKENDS_CONFIG_NAME: "10.10.1.1,10.1.1.2",
     state.PROTOCOL_CONFIG_NAME: "https",
+    state.HEALTH_CHECK_PATH_CONFIG_NAME: "/",
+    state.HEALTH_CHECK_INTERVAL_CONFIG_NAME: 30,
+    state.BACKENDS_PATH_CONFIG_NAME: "/",
+    state.PROXY_CACHE_VALID_CONFIG_NAME: '["200 302 1h", "404 1m"]',
 }
 
 
@@ -124,6 +134,10 @@ def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harne
         "path": "/",
         "backends": '["10.10.1.1", "10.1.1.2"]',
         "protocol": "https",
+        "backends_path": "/",
+        "health_check_interval": "30",
+        "health_check_path": "/",
+        "proxy_cache_valid": '["200 302 1h", "404 1m"]',
     }
 
 
