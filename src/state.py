@@ -159,52 +159,9 @@ class Configuration(pydantic.BaseModel):
                 raise ValueError(f"Invalid item in proxy_cache_valid: {item}")
             status_codes, time_str = tokens[:-1], tokens[-1]
             for code_str in status_codes:
-                Configuration.check_status_code(code_str)
-            Configuration.check_nginx_time_str(time_str)
+                check_status_code(code_str)
+            check_nginx_time_str(time_str)
         return value
-
-    @staticmethod
-    def check_nginx_time_str(time_str: str) -> None:
-        """Check if nginx time str is valid.
-
-        Args:
-            time_str: The time str for nginx configuration.
-
-        Raises:
-            ValueError: The input is not valid time str for nginx.
-        """
-        time_char = set(("d", "h", "m", "s"))
-        if time_str[-1] not in time_char:
-            raise ValueError(f"Invalid time for proxy_cache_valid: {time_str}")
-        try:
-            time = int(time_str[:-1])
-        except ValueError as err:
-            raise ValueError(f"Non-int time in proxy_cache_valid: {time_str}") from err
-
-        if time < 1:
-            raise ValueError(f"Time must be positive int for proxy_cache_valid: {time_str}")
-
-    @staticmethod
-    def check_status_code(code_str: str) -> None:
-        """Check if status code is valid.
-
-        Args:
-            code_str: The status code.
-
-        Raises:
-            ValueError: The input is not valid status code.
-        """
-        try:
-            code = int(code_str)
-        except ValueError as err:
-            raise ValueError(f"Non-int status code in proxy_cache_valid: {code_str}") from err
-
-        # The standard status code is found here:
-        # https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
-        # It is possible for software to have custom status code, so any three digit int is
-        # supported here.
-        if code < 100 or code > 999:
-            raise ValueError(f"Invalid status code in proxy_cache_valid: {code}")
 
     @classmethod
     def from_charm(cls, charm: ops.CharmBase) -> "Configuration":
@@ -309,3 +266,46 @@ def validate_path_value(value: str) -> str:
     if valid_path.fullmatch(value) is None:
         raise ValueError("Path contains non-allowed character")
     return value
+
+
+def check_nginx_time_str(time_str: str) -> None:
+    """Check if nginx time str is valid.
+
+    Args:
+        time_str: The time str for nginx configuration.
+
+    Raises:
+        ValueError: The input is not valid time str for nginx.
+    """
+    time_char = set(("d", "h", "m", "s"))
+    if time_str[-1] not in time_char:
+        raise ValueError(f"Invalid time for proxy_cache_valid: {time_str}")
+    try:
+        time = int(time_str[:-1])
+    except ValueError as err:
+        raise ValueError(f"Non-int time in proxy_cache_valid: {time_str}") from err
+
+    if time < 1:
+        raise ValueError(f"Time must be positive int for proxy_cache_valid: {time_str}")
+
+
+def check_status_code(code_str: str) -> None:
+    """Check if status code is valid.
+
+    Args:
+        code_str: The status code.
+
+    Raises:
+        ValueError: The input is not valid status code.
+    """
+    try:
+        code = int(code_str)
+    except ValueError as err:
+        raise ValueError(f"Non-int status code in proxy_cache_valid: {code_str}") from err
+
+    # The standard status code is found here:
+    # https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+    # It is possible for software to have custom status code, so any three digit int is
+    # supported here.
+    if code < 100 or code > 999:
+        raise ValueError(f"Invalid status code in proxy_cache_valid: {code}")
