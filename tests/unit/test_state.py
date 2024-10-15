@@ -56,7 +56,7 @@ def test_valid_config():
     assert config.health_check_path == "/"
     assert config.health_check_interval == 30
     assert config.backends_path == "/"
-    assert config.proxy_cache_valid == "[]"
+    assert config.proxy_cache_valid == ()
 
 
 def test_hostname_with_subdomain():
@@ -76,7 +76,7 @@ def test_hostname_with_subdomain():
     assert config.health_check_path == "/"
     assert config.health_check_interval == 30
     assert config.backends_path == "/"
-    assert config.proxy_cache_valid == "[]"
+    assert config.proxy_cache_valid == ()
 
 
 def test_empty_hostname():
@@ -144,7 +144,7 @@ def test_longer_path():
     assert config.health_check_path == "/path/to/destination/1"
     assert config.health_check_interval == 30
     assert config.backends_path == "/path/to/destination/2"
-    assert config.proxy_cache_valid == "[]"
+    assert config.proxy_cache_valid == ()
 
 
 def test_empty_path():
@@ -262,7 +262,7 @@ def test_http_protocol():
     assert config.health_check_path == "/"
     assert config.health_check_interval == 30
     assert config.backends_path == "/"
-    assert config.proxy_cache_valid == "[]"
+    assert config.proxy_cache_valid == ()
 
 
 def test_config_protocol_invalid():
@@ -420,7 +420,7 @@ def test_valid_proxy_cache_valid():
     assert config.health_check_path == "/"
     assert config.health_check_interval == 30
     assert config.backends_path == "/"
-    assert config.proxy_cache_valid == '["200 302 30m", "400 1m", "500 1m"]'
+    assert config.proxy_cache_valid == ("200 302 30m", "400 1m", "500 1m")
 
 
 def test_configuration_to_data():

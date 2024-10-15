@@ -61,7 +61,7 @@ class Configuration(pydantic.BaseModel):
     health_check_path: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
     health_check_interval: pydantic.PositiveInt
     backends_path: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
-    proxy_cache_valid: str
+    proxy_cache_valid: tuple[str, ...]
 
     @pydantic.field_validator("hostname")
     @classmethod
@@ -145,15 +145,8 @@ class Configuration(pydantic.BaseModel):
         Returns:
             The value after validation.
         """
-        try:
-            cache_valid = json.loads(value)
-        except json.JSONDecodeError as err:
-            raise ValueError(f"Unable to parse proxy_cache_valid: {value}") from err
 
-        if not isinstance(cache_valid, list):
-            raise ValueError(f"The proxy_cache_valid is not a list: {value}")
-
-        for item in cache_valid:
+        for item in value:
             tokens = item.split(" ")
             if len(tokens) < 2:
                 raise ValueError(f"Invalid item in proxy_cache_valid: {item}")
@@ -189,11 +182,18 @@ class Configuration(pydantic.BaseModel):
             int, charm.config.get(HEALTH_CHECK_INTERVAL_CONFIG_NAME, 30)
         )
         backends_path = typing.cast(str, charm.config.get(BACKENDS_PATH_CONFIG_NAME, "")).strip()
-        proxy_cache_valid = typing.cast(
+        proxy_cache_valid_str = typing.cast(
             str, charm.config.get(PROXY_CACHE_VALID_CONFIG_NAME, "")
         ).strip()
 
         backends = tuple(ip.strip() for ip in backends_str.split(","))
+        try:
+            proxy_cache_valid = json.loads(proxy_cache_valid_str)
+        except json.JSONDecodeError as err:
+            raise ConfigurationError(f"Unable to parse proxy_cache_valid: {proxy_cache_valid_str}") from err
+        if not isinstance(proxy_cache_valid, list):
+            raise ConfigurationError(f"The proxy_cache_valid is not a list: {proxy_cache_valid_str}")
+
         try:
             return cls(
                 hostname=hostname,
