@@ -56,7 +56,7 @@ def test_valid_config():
     assert config.health_check_path == "/"
     assert config.health_check_interval == 30
     assert config.backends_path == "/"
-    assert config.proxy_cache_valid == '["200 302 1h", "404 1m"]'
+    assert config.proxy_cache_valid == "[]"
 
 
 def test_hostname_with_subdomain():
@@ -76,7 +76,7 @@ def test_hostname_with_subdomain():
     assert config.health_check_path == "/"
     assert config.health_check_interval == 30
     assert config.backends_path == "/"
-    assert config.proxy_cache_valid == '["200 302 1h", "404 1m"]'
+    assert config.proxy_cache_valid == "[]"
 
 
 def test_empty_hostname():
@@ -144,7 +144,7 @@ def test_longer_path():
     assert config.health_check_path == "/path/to/destination/1"
     assert config.health_check_interval == 30
     assert config.backends_path == "/path/to/destination/2"
-    assert config.proxy_cache_valid == '["200 302 1h", "404 1m"]'
+    assert config.proxy_cache_valid == "[]"
 
 
 def test_empty_path():
@@ -262,7 +262,7 @@ def test_http_protocol():
     assert config.health_check_path == "/"
     assert config.health_check_interval == 30
     assert config.backends_path == "/"
-    assert config.proxy_cache_valid == '["200 302 1h", "404 1m"]'
+    assert config.proxy_cache_valid == "[]"
 
 
 def test_config_protocol_invalid():
@@ -403,6 +403,26 @@ def test_invalid_status_code_proxy_cache_valid():
     assert "Value error, Invalid status code in proxy_cache_valid: 99" in str(err.value)
 
 
+def test_valid_proxy_cache_valid():
+    """
+    arrange: Mock charm with valid complex proxy_cache_valid configuration.
+    act: Create the configuration from the charm.
+    assert: Correct configurations from the mock charm.
+    """
+    charm = MockCharmFactory()
+    charm.config[PROXY_CACHE_VALID_CONFIG_NAME] = '["200 302 30m", "400 1m", "500 1m"]'
+
+    config = Configuration.from_charm(charm)
+    assert config.hostname == "example.com"
+    assert config.path == "/"
+    assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
+    assert config.protocol == "https"
+    assert config.health_check_path == "/"
+    assert config.health_check_interval == 30
+    assert config.backends_path == "/"
+    assert config.proxy_cache_valid == '["200 302 30m", "400 1m", "500 1m"]'
+
+
 def test_configuration_to_data():
     """
     arrange: Mock charm with valid configurations.
@@ -421,7 +441,7 @@ def test_configuration_to_data():
         "health_check_path": "/",
         "health_check_interval": "30",
         "backends_path": "/",
-        "proxy_cache_valid": '["200 302 1h", "404 1m"]',
+        "proxy_cache_valid": "[]",
     }
 
 

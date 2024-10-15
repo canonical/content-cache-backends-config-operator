@@ -47,4 +47,4 @@ options:
       are cached for 1 minute. This configuration is passed to nginx proxy-cache-valid 
       (https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid).
     type: string
-    default: '["200 302 1h", "404 1m"]'
+    default: '[]'

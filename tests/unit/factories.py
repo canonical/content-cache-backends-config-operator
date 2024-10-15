@@ -57,6 +57,6 @@ class MockCharmFactory(factory.Factory):
             HEALTH_CHECK_PATH_CONFIG_NAME: "/",
             HEALTH_CHECK_INTERVAL_CONFIG_NAME: "30",
             BACKENDS_PATH_CONFIG_NAME: "/",
-            PROXY_CACHE_VALID_CONFIG_NAME: '["200 302 1h", "404 1m"]',
+            PROXY_CACHE_VALID_CONFIG_NAME: "[]",
         }
     )
