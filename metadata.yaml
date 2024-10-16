@@ -5,46 +5,32 @@
 
 # The charm package name, no spaces (required)
 # See https://juju.is/docs/sdk/naming#heading--naming-charms for guidance.
-name: is-charms-template
- 
+name: content-cache-backends-config
+
 # The following metadata are human-readable and will be published prominently on Charmhub.
 
 # (Recommended)
-display-name: Charm Template
+display-name: Content Cache Backends Config
 
 # (Required)
-summary: A very short one-line summary of the charm.
+summary: Provides configuration to the Content Cache charm.
 docs: https://discourse.charmhub.io
-issues: https://github.com/canonical/is-charms-template-repo/issues
+issues: https://github.com/canonical/content-cache-backends-config/issues
 maintainers: 
   - https://launchpad.net/~canonical-is-devops
-source: https://github.com/canonical/is-charms-template-repo
+source: https://github.com/canonical/content-cache-backends-config
 
 description: |
-  A single sentence that says what the charm is, concisely and memorably.
+  Provides configuration for a location the associated set of backends to the Content Cache charm.
+  
+  This charm is a subordinate charm to the Content Cache charm. This charm should be integrated 
+  with the Content Cache charm to inject the charm configuration of this charm. For more 
+  information see the Content Cache charm.
 
-  A paragraph of one to three short sentences, that describe what the charm does.
+subordinate: true
 
-  A third paragraph that explains what need the charm meets.
-
-  Finally, a paragraph that describes whom the charm is useful for.
-
-# The containers and resources metadata apply to Kubernetes charms only.
-# Remove them if not required.
-
-# Your workload’s containers.
-containers:
-  httpbin:
-    resource: httpbin-image
-
-# This field populates the Resources tab on Charmhub.
-resources:
-  # An OCI image resource for each container listed above.
-  # You may remove this if your charm will run without a workload sidecar container.
-  httpbin-image:
-    type: oci-image
-    description: OCI image for httpbin
-    # The upstream-source field is ignored by Juju. It is included here as a reference
-    # so the integration testing suite knows which image to deploy during testing. This field
-    # is also used by the 'canonical/charming-actions' Github action for automated releasing.
-    upstream-source: kennethreitz/httpbin
+requires:
+  cache-config:
+    interface: content-cache-config
+    scope: container
+    limit: 1

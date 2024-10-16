@@ -6,11 +6,22 @@
 # See https://juju.is/docs/config for guidance.
 
 options:
-  # An example config option to customise the log level of the workload
-  log-level:
+  hostname:
     description: |
-      Configures the log level of gunicorn. 
-
-      Acceptable values are: "info", "debug", "warning", "error" and "critical"
-    default: "info"
+      The hostname for the virtual host for this set of backends.
     type: string
+  path:
+    description: |
+      The location to serve with this set of backends. Does not support regex.
+    type: string
+    default: /
+  backends:
+    description: |
+      A comma-separated list of IPs. If multiple IPs are provided, the access to the backends will 
+      be load-balanced.
+    type: string
+  protocol:
+    description: |
+      The protocol to request the backends. Can be http or https.
+    type: string
+    default: https

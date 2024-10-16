@@ -3,115 +3,95 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-# Learn more at: https://juju.is/docs/sdk
-
-"""Charm the service.
-
-Refer to the following post for a quick-start guide that will help you
-develop a new k8s charm using the Operator Framework:
-
-https://discourse.charmhub.io/t/4208
-"""
+"""The content-cache-backends-config charm."""
 
 import logging
-import typing
 
 import ops
-from ops import pebble
 
-# Log messages can be retrieved using juju debug-log
+from errors import ConfigurationError
+from state import Configuration
+
 logger = logging.getLogger(__name__)
 
-VALID_LOG_LEVELS = ["info", "debug", "warning", "error", "critical"]
+CACHE_CONFIG_INTEGRATION_NAME = "cache-config"
 
 
-class IsCharmsTemplateCharm(ops.CharmBase):
-    """Charm the service."""
+class ContentCacheBackendsConfigCharm(ops.CharmBase):
+    """Charm the application."""
 
-    def __init__(self, *args: typing.Any):
-        """Construct.
-
-        Args:
-            args: Arguments passed to the CharmBase parent constructor.
-        """
-        super().__init__(*args)
-        self.framework.observe(self.on.httpbin_pebble_ready, self._on_httpbin_pebble_ready)
-        self.framework.observe(self.on.config_changed, self._on_config_changed)
-
-    def _on_httpbin_pebble_ready(self, event: ops.PebbleReadyEvent) -> None:
-        """Define and start a workload using the Pebble API.
-
-        Change this example to suit your needs. You'll need to specify the right entrypoint and
-        environment configuration for your specific workload.
-
-        Learn more about interacting with Pebble at at https://juju.is/docs/sdk/pebble.
+    def __init__(self, framework: ops.Framework) -> None:
+        """Initialize the object.
 
         Args:
-            event: event triggering the handler.
+            framework: The ops framework.
         """
-        # Get a reference the container attribute on the PebbleReadyEvent
-        container = event.workload
-        # Add initial Pebble config layer using the Pebble API
-        container.add_layer("httpbin", self._pebble_layer, combine=True)
-        # Make Pebble reevaluate its plan, ensuring any services are started if enabled.
-        container.replan()
-        # Learn more about statuses in the SDK docs:
-        # https://juju.is/docs/sdk/constructs#heading--statuses
+        super().__init__(framework)
+        framework.observe(self.on.start, self._on_start)
+        framework.observe(self.on.config_changed, self._on_config_changed)
+        framework.observe(
+            self.on[CACHE_CONFIG_INTEGRATION_NAME].relation_changed,
+            self._on_cache_config_relation_changed,
+        )
+        framework.observe(
+            self.on[CACHE_CONFIG_INTEGRATION_NAME].relation_broken,
+            self._on_cache_config_relation_broken,
+        )
+
+    def _on_start(self, _: ops.StartEvent) -> None:
+        """Handle start event."""
+        self._leader_set_status()
+
+    def _on_config_changed(self, _: ops.ConfigChangedEvent) -> None:
+        """Handle config changed event."""
+        self._load_integration_data()
+
+    def _on_cache_config_relation_changed(self, _: ops.RelationChangedEvent) -> None:
+        """Handle cache config relation changed event."""
+        self._load_integration_data()
+
+    def _on_cache_config_relation_broken(self, _: ops.RelationBrokenEvent) -> None:
+        """Handle cache config relation broken event."""
+        self._leader_set_status()
+
+    def _load_integration_data(self) -> None:
+        """Validate the configuration and load to integration."""
+        if not self._leader_set_status():
+            return
+
+        logger.info("Loading configuration")
+        try:
+            config = Configuration.from_charm(self)
+            data = config.to_integration_data()
+        except ConfigurationError as err:
+            logger.error("Configuration error: %s", err)
+            self.unit.status = ops.BlockedStatus(str(err))
+            return
+
+        logger.info("Setting integration data")
+        rel = self.model.relations[CACHE_CONFIG_INTEGRATION_NAME][0]
+        rel.data[self.app].update(data)
+        logger.info("Integration data set")
+
+    def _leader_set_status(self) -> bool:
+        """Set the charm status.
+
+        Returns:
+            Whether the unit is leader and ready.
+        """
+        if not self.unit.is_leader():
+            logger.debug("Not leader: not setting the application status")
+            self.unit.status = ops.ActiveStatus()
+            return False
+
+        if not self.model.relations[CACHE_CONFIG_INTEGRATION_NAME]:
+            logger.info("No integration found")
+            self.unit.status = ops.BlockedStatus("Waiting for integration")
+            return False
+
         self.unit.status = ops.ActiveStatus()
-
-    def _on_config_changed(self, event: ops.ConfigChangedEvent) -> None:
-        """Handle changed configuration.
-
-        Change this example to suit your needs. If you don't need to handle config, you can remove
-        this method.
-
-        Learn more about config at https://juju.is/docs/sdk/config
-
-        Args:
-            event: event triggering the handler.
-        """
-        # Fetch the new config value
-        log_level = str(self.model.config["log-level"]).lower()
-
-        # Do some validation of the configuration option
-        if log_level in VALID_LOG_LEVELS:
-            # The config is good, so update the configuration of the workload
-            container = self.unit.get_container("httpbin")
-            # Verify that we can connect to the Pebble API in the workload container
-            if container.can_connect():
-                # Push an updated layer with the new config
-                container.add_layer("httpbin", self._pebble_layer, combine=True)
-                container.replan()
-
-                logger.debug("Log level for gunicorn changed to '%s'", log_level)
-                self.unit.status = ops.ActiveStatus()
-            else:
-                # We were unable to connect to the Pebble API, so we defer this event
-                event.defer()
-                self.unit.status = ops.WaitingStatus("waiting for Pebble API")
-        else:
-            # In this case, the config option is bad, so block the charm and notify the operator.
-            self.unit.status = ops.BlockedStatus("invalid log level: '{log_level}'")
-
-    @property
-    def _pebble_layer(self) -> pebble.LayerDict:
-        """Return a dictionary representing a Pebble layer."""
-        return {
-            "summary": "httpbin layer",
-            "description": "pebble config layer for httpbin",
-            "services": {
-                "httpbin": {
-                    "override": "replace",
-                    "summary": "httpbin",
-                    "command": "gunicorn -b 0.0.0.0:80 httpbin:app -k gevent",
-                    "startup": "enabled",
-                    "environment": {
-                        "GUNICORN_CMD_ARGS": f"--log-level {self.model.config['log-level']}"
-                    },
-                }
-            },
-        }
+        return True
 
 
 if __name__ == "__main__":  # pragma: nocover
-    ops.main.main(IsCharmsTemplateCharm)
+    ops.main(ContentCacheBackendsConfigCharm)
