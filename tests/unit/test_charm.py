@@ -3,6 +3,7 @@
 
 """Unit test for the charm."""
 
+from typing import Mapping
 from unittest.mock import MagicMock
 
 import ops
@@ -15,11 +16,19 @@ from charm import CACHE_CONFIG_INTEGRATION_NAME, ContentCacheBackendsConfigCharm
 # Test might need to access private methods.
 # pylint: disable=protected-access
 
-SAMPLE_CONFIG = {
+JujuConfigValue = str | int | float | bool
+JujuConfigKey = str
+JujuConfig = Mapping[JujuConfigKey, JujuConfigValue]
+
+
+SAMPLE_CONFIG: JujuConfig = {
     state.HOSTNAME_CONFIG_NAME: "example.com",
     state.PATH_CONFIG_NAME: "/",
     state.BACKENDS_CONFIG_NAME: "10.10.1.1,10.1.1.2",
     state.PROTOCOL_CONFIG_NAME: "https",
+    state.FAIL_TIMEOUT_CONFIG_NAME: "30s",
+    state.BACKENDS_PATH_CONFIG_NAME: "/",
+    state.PROXY_CACHE_VALID_CONFIG_NAME: '["200 302 1h", "404 1m"]',
 }
 
 
@@ -39,6 +48,7 @@ def test_config_no_integration(charm: ContentCacheBackendsConfigCharm, harness: 
     assert: The charm in active status.
     """
     harness.update_config(SAMPLE_CONFIG)
+
     assert charm.unit.status == ops.BlockedStatus("Waiting for integration")
 
 
@@ -124,6 +134,9 @@ def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harne
         "path": "/",
         "backends": '["10.10.1.1", "10.1.1.2"]',
         "protocol": "https",
+        "backends_path": "/",
+        "fail_timeout": "30s",
+        "proxy_cache_valid": '["200 302 1h", "404 1m"]',
     }
 
 
@@ -140,6 +153,7 @@ def test_integration_with_invalid_config(charm: ContentCacheBackendsConfigCharm,
     harness.add_relation_unit(relation_id, remote_unit_name="content-cache/0")
 
     harness.update_config({state.BACKENDS_CONFIG_NAME: ""})
+
     assert charm.unit.status == ops.BlockedStatus("Empty backends configuration found")
 
 
