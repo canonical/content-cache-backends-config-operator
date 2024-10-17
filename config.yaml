@@ -25,11 +25,13 @@ options:
       The protocol to request the backends. Can be http or https.
     type: string
     default: https
-  health-check-interval:
+  fail-timeout:
     description: |
-      The seconds to wait between health checks on the backends.
-    type: int
-    default: 30
+      The time to wait before using a backend after failure. This has no effect if only 
+      a single backend is configuration. The value should a positive int followed by s for seconds
+      or m for minutes.
+    type: string
+    default: 30s
   backends-path:
     description: |
       The path part of the URL to query the backends.

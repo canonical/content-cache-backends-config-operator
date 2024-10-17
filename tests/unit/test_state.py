@@ -52,7 +52,7 @@ def test_valid_config():
     assert config.path == "/"
     assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
     assert config.protocol == "https"
-    assert config.health_check_interval == 30
+    assert config.fail_timeout == "30s"
     assert config.backends_path == "/"
     assert config.proxy_cache_valid == ()
 
@@ -71,7 +71,7 @@ def test_hostname_with_subdomain():
     assert config.path == "/"
     assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
     assert config.protocol == "https"
-    assert config.health_check_interval == 30
+    assert config.fail_timeout == "30s"
     assert config.backends_path == "/"
     assert config.proxy_cache_valid == ()
 
@@ -137,7 +137,7 @@ def test_longer_path():
     assert config.path == "/path/to/destination/0"
     assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
     assert config.protocol == "https"
-    assert config.health_check_interval == 30
+    assert config.fail_timeout == "30s"
     assert config.backends_path == "/path/to/destination/2"
     assert config.proxy_cache_valid == ()
 
@@ -236,7 +236,7 @@ def test_http_protocol():
     assert config.path == "/"
     assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
     assert config.protocol == "http"
-    assert config.health_check_interval == 30
+    assert config.fail_timeout == "30s"
     assert config.backends_path == "/"
     assert config.proxy_cache_valid == ()
 
@@ -393,7 +393,7 @@ def test_valid_proxy_cache_valid():
     assert config.path == "/"
     assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
     assert config.protocol == "https"
-    assert config.health_check_interval == 30
+    assert config.fail_timeout == "30s"
     assert config.backends_path == "/"
     assert config.proxy_cache_valid == ("200 302 30m", "400 1m", "500 1m")
 
@@ -413,7 +413,7 @@ def test_configuration_to_data():
         "path": "/",
         "backends": '["10.10.1.1", "10.10.2.2"]',
         "protocol": "https",
-        "health_check_interval": "30",
+        "fail_timeout": "30s",
         "backends_path": "/",
         "proxy_cache_valid": "[]",
     }
