@@ -48,6 +48,7 @@ def test_config_no_integration(charm: ContentCacheBackendsConfigCharm, harness: 
     assert: The charm in active status.
     """
     harness.update_config(SAMPLE_CONFIG)
+
     assert charm.unit.status == ops.BlockedStatus("Waiting for integration")
 
 
@@ -98,6 +99,7 @@ def test_integration_data_not_leader(
     getattr(charm, event)(mock_event)
 
     data = harness.get_relation_data(relation_id, app_or_unit=charm.app.name)
+
     assert charm.unit.status == ops.ActiveStatus()
     assert data == {}
 
@@ -127,6 +129,7 @@ def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harne
     getattr(charm, event)(mock_event)
 
     data = harness.get_relation_data(relation_id, app_or_unit=charm.app.name)
+
     assert charm.unit.status == ops.ActiveStatus()
     assert data == {
         "hostname": "example.com",
@@ -152,6 +155,7 @@ def test_integration_with_invalid_config(charm: ContentCacheBackendsConfigCharm,
     harness.add_relation_unit(relation_id, remote_unit_name="content-cache/0")
 
     harness.update_config({state.BACKENDS_CONFIG_NAME: ""})
+
     assert charm.unit.status == ops.BlockedStatus("Empty backends configuration found")
 
 
@@ -191,5 +195,6 @@ def test_integration_removed(
     if is_leader:
         assert charm.unit.status == ops.BlockedStatus("Waiting for integration")
         return
+
     # follower unit is always active.
     assert charm.unit.status == ops.ActiveStatus()

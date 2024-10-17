@@ -49,6 +49,7 @@ def test_valid_config():
     charm = MockCharmFactory()
 
     config = Configuration.from_charm(charm)
+
     assert config.hostname == "example.com"
     assert config.path == "/"
     assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
@@ -68,6 +69,7 @@ def test_hostname_with_subdomain():
     charm.config[HOSTNAME_CONFIG_NAME] = "sub.example.com"
 
     config = Configuration.from_charm(charm)
+
     assert config.hostname == "sub.example.com"
     assert config.path == "/"
     assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
@@ -134,6 +136,7 @@ def test_longer_path():
     charm.config[BACKENDS_PATH_CONFIG_NAME] = "/path/to/destination/2"
 
     config = Configuration.from_charm(charm)
+
     assert config.hostname == "example.com"
     assert config.path == "/path/to/destination/0"
     assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
@@ -154,6 +157,7 @@ def test_empty_path():
 
     with pytest.raises(ConfigurationError) as err:
         Configuration.from_charm(charm)
+
     assert str(err.value) == "Config error: ['path = : String should have at least 1 character']"
 
 
@@ -233,6 +237,7 @@ def test_http_protocol():
     charm.config[PROTOCOL_CONFIG_NAME] = "http"
 
     config = Configuration.from_charm(charm)
+
     assert config.hostname == "example.com"
     assert config.path == "/"
     assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
@@ -363,6 +368,7 @@ def test_valid_proxy_cache_valid(proxy_cache_valid: str):
     charm.config[PROXY_CACHE_VALID_CONFIG_NAME] = proxy_cache_valid
 
     config = Configuration.from_charm(charm)
+
     assert config.hostname == "example.com"
     assert config.path == "/"
     assert config.backends == (IPv4Address("10.10.1.1"), IPv4Address("10.10.2.2"))
@@ -382,6 +388,7 @@ def test_configuration_to_data():
 
     config = Configuration.from_charm(charm)
     data = config.to_integration_data()
+
     assert data == {
         "hostname": "example.com",
         "path": "/",

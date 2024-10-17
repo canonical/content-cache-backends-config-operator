@@ -130,7 +130,7 @@ class Configuration(pydantic.BaseModel):
 
     @pydantic.field_validator("proxy_cache_valid")
     @classmethod
-    def validate_proxy_cache_valid(cls, value: str) -> str:
+    def validate_proxy_cache_valid(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Validate the proxy_cache_valid.
 
         Args:
@@ -190,12 +190,11 @@ class Configuration(pydantic.BaseModel):
             )
 
         try:
+            # Ignore type check and let pydantic handle the type with validation errors.
             return cls(
                 hostname=hostname,
                 path=path,
-                # Pydantic allows converting str to IPvAnyAddress.
                 backends=backends,  # type: ignore
-                # Pydantic allows converting str to a string enum.
                 protocol=protocol,  # type: ignore
                 fail_timeout=fail_timeout,
                 backends_path=backends_path,
@@ -271,7 +270,7 @@ def check_nginx_time_str(time_str: str) -> None:
     Raises:
         ValueError: The input is not valid time str for nginx.
     """
-    time_char = set(("h", "m", "s"))
+    time_char = {"h", "m", "s"}
     if time_str[-1] not in time_char:
         raise ValueError(f"Invalid time for proxy_cache_valid: {time_str}")
     try:
