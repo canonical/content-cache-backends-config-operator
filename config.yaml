@@ -27,9 +27,9 @@ options:
     default: https
   fail-timeout:
     description: |
-      The time to wait before using a backend after failure. This has no effect if only
-      a single backend is configuration. The value should a positive int followed by s for seconds,
-      m for minutes, or h for hours.
+      The time to wait before using a backend after failure. The other backend will be used 
+      instead. No effect if only one backend is specified. The value should a positive int followed 
+      by s for seconds, m for minutes, or h for hours.
     type: string
     default: 30s
   backends-path:
