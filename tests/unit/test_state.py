@@ -195,11 +195,11 @@ def test_invalid_backends_path():
 @pytest.mark.parametrize(
     "invalid_backends, error_message",
     [
-        pytest.param("", "Empty backends configuration found", id="empty backends"),
+        pytest.param("", "Empty backends configuration found", id="empty"),
         pytest.param(
             "mock",
             "Config error: ['backends = mock: value is not a valid IPv4 or IPv6 address']",
-            id="incorrect backends format",
+            id="incorrect format",
         ),
         pytest.param(
             "10.10.1",
@@ -275,124 +275,82 @@ def test_invalid_format_proxy_cache_valid():
     assert "Unable to parse proxy_cache_valid: invalid" in str(err.value)
 
 
-def test_without_time_proxy_cache_valid():
+@pytest.mark.parametrize(
+    "invalid_proxy_cache_valid, error_message",
+    [
+        pytest.param(
+            "invalid",
+            "Unable to parse proxy_cache_valid: invalid",
+            id="invalid format",
+        ),
+        pytest.param(
+            '["200"]',
+            "Invalid item in proxy_cache_valid: 200",
+            id="no time",
+        ),
+        pytest.param(
+            '{"hello": 10}',
+            'The proxy_cache_valid is not a list: {"hello": 10}',
+            id="non list",
+        ),
+        pytest.param(
+            '["200 302 1y"]',
+            "Invalid time for proxy_cache_valid: 1y",
+            id="Invalid time unit",
+        ),
+        pytest.param(
+            '["200 tenm"]',
+            "Non-int time in proxy_cache_valid: tenm",
+            id="non-int time",
+        ),
+        pytest.param(
+            '["200 -10h"]',
+            "Time must be positive int for proxy_cache_valid: -10h",
+            id="negative time",
+        ),
+        pytest.param(
+            '["ok 30m"]',
+            "Non-int status code in proxy_cache_valid: ok",
+            id="non-int status code",
+        ),
+        pytest.param(
+            '["200 99 30m"]',
+            "Invalid status code in proxy_cache_valid: 99",
+            id="invalid status code",
+        ),
+    ],
+)
+def test_invalid_proxy_cache_valid(invalid_proxy_cache_valid: str, error_message: str):
     """
-    arrange: Mock charm with cache valid config with time.
+    arrange: Mock charm with various invalid cache valid configurations.
     act: Create the state from the charm.
     assert: Configuration error raised with a correct error message.
     """
     charm = MockCharmFactory()
-    charm.config[PROXY_CACHE_VALID_CONFIG_NAME] = '["200"]'
+    charm.config[PROXY_CACHE_VALID_CONFIG_NAME] = invalid_proxy_cache_valid
 
     with pytest.raises(ConfigurationError) as err:
         Configuration.from_charm(charm)
 
-    assert "Value error, Invalid item in proxy_cache_valid: 200" in str(err.value)
-
-
-def test_non_list_proxy_cache_valid():
-    """
-    arrange: Mock charm with cache valid config that is not a list.
-    act: Create the state from the charm.
-    assert: Configuration error raised with a correct error message.
-    """
-    charm = MockCharmFactory()
-    charm.config[PROXY_CACHE_VALID_CONFIG_NAME] = '{"hello": 10}'
-
-    with pytest.raises(ConfigurationError) as err:
-        Configuration.from_charm(charm)
-
-    assert 'The proxy_cache_valid is not a list: {"hello": 10}' in str(err.value)
-
-
-def test_invalid_time_str_proxy_cache_valid():
-    """
-    arrange: Mock charm with cache valid config of invalid time string.
-    act: Create the state from the charm.
-    assert: Configuration error raised with a correct error message.
-    """
-    charm = MockCharmFactory()
-    charm.config[PROXY_CACHE_VALID_CONFIG_NAME] = '["200 302 1y"]'
-
-    with pytest.raises(ConfigurationError) as err:
-        Configuration.from_charm(charm)
-
-    assert "Value error, Invalid time for proxy_cache_valid: 1y" in str(err.value)
-
-
-def test_non_int_time_proxy_cache_valid():
-    """
-    arrange: Mock charm with cache valid config with non int time.
-    act: Create the state from the charm.
-    assert: Configuration error raised with a correct error message.
-    """
-    charm = MockCharmFactory()
-    charm.config[PROXY_CACHE_VALID_CONFIG_NAME] = '["200 302 tenm"]'
-
-    with pytest.raises(ConfigurationError) as err:
-        Configuration.from_charm(charm)
-
-    assert "Value error, Non-int time in proxy_cache_valid: tenm" in str(err.value)
-
-
-def test_negative_time_proxy_cache_valid():
-    """
-    arrange: Mock charm with cache valid config with negative time.
-    act: Create the state from the charm.
-    assert: Configuration error raised with a correct error message.
-    """
-    charm = MockCharmFactory()
-    charm.config[PROXY_CACHE_VALID_CONFIG_NAME] = '["200 302 -10h"]'
-
-    with pytest.raises(ConfigurationError) as err:
-        Configuration.from_charm(charm)
-
-    assert "Value error, Time must be positive int for proxy_cache_valid: -10h" in str(err.value)
-
-
-def test_non_int_status_code_proxy_cache_valid():
-    """
-    arrange: Mock charm with cache valid config with non-int status code.
-    act: Create the state from the charm.
-    assert: Configuration error raised with a correct error message.
-    """
-    charm = MockCharmFactory()
-    charm.config[PROXY_CACHE_VALID_CONFIG_NAME] = '["ok 30m"]'
-
-    with pytest.raises(ConfigurationError) as err:
-        Configuration.from_charm(charm)
-
-    assert "Value error, Non-int status code in proxy_cache_valid: ok" in str(err.value)
-
-
-def test_invalid_status_code_proxy_cache_valid():
-    """
-    arrange: Mock charm with cache valid config with invalid status code.
-    act: Create the state from the charm.
-    assert: Configuration error raised with a correct error message.
-    """
-    charm = MockCharmFactory()
-    charm.config[PROXY_CACHE_VALID_CONFIG_NAME] = '["200 99 30m"]'
-
-    with pytest.raises(ConfigurationError) as err:
-        Configuration.from_charm(charm)
-
-    assert "Value error, Invalid status code in proxy_cache_valid: 99" in str(err.value)
+    assert error_message in str(err.value)
 
 
 @pytest.mark.parametrize(
     "proxy_cache_valid",
     [
-        pytest.param("[]", id="empty proxy-cache-valid"),
+        pytest.param("[]", id="empty"),
         pytest.param(
             '["200 302 2h", "400 1m"]',
-            id="common proxy-cache-valid",
+            id="common",
         ),
-        pytest.param('["200 1m"]', id="single proxy-cache-valid"),
-        pytest.param('["200 1s"]', id="seconds in proxy-cache-valid"),
-        pytest.param('["200 1h"]', id="hours in proxy-cache-valid"),
-        pytest.param('["100 200 302 404 1h"]', id="long in proxy-cache-valid"),
-        pytest.param('["100 200 302 404 1h", "300 500 502 2m", "202 201 401 402 403 1s"]', id="multiple long in proxy-cache-valid"),
+        pytest.param('["200 1m"]', id="single item"),
+        pytest.param('["200 1s"]', id="seconds in time"),
+        pytest.param('["200 1h"]', id="hours in time"),
+        pytest.param('["100 200 302 404 1h"]', id="long item"),
+        pytest.param(
+            '["100 200 302 404 1h", "300 500 502 2m", "202 201 401 402 403 1s"]',
+            id="multiple long in proxy-cache-valid",
+        ),
     ],
 )
 def test_valid_proxy_cache_valid(proxy_cache_valid: str):
