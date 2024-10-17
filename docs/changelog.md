@@ -4,7 +4,7 @@
 
 ### Added
 
-- Support for health-check-path, health-check-interval charm configurations.
+- Support for health-check-interval charm configurations.
 - Support for backends-path charm configurations.
 - Support for proxy-cache-valid charm configurations.
 

@@ -21,7 +21,6 @@ HOSTNAME_CONFIG_NAME = "hostname"
 PATH_CONFIG_NAME = "path"
 BACKENDS_CONFIG_NAME = "backends"
 PROTOCOL_CONFIG_NAME = "protocol"
-HEALTH_CHECK_PATH_CONFIG_NAME = "health-check-path"
 HEALTH_CHECK_INTERVAL_CONFIG_NAME = "health-check-interval"
 BACKENDS_PATH_CONFIG_NAME = "backends-path"
 PROXY_CACHE_VALID_CONFIG_NAME = "proxy-cache-valid"
@@ -48,7 +47,6 @@ class Configuration(pydantic.BaseModel):
         backends: The backends for this set of configuration.
         protocol: The protocol to request the backends with. Can be http or
             https.
-        health_check_path: The health check path for the backends.
         health_check_interval: The interval between health check for the backends.
         backends_path: The path to request the backends.
         proxy_cache_valid: The cache valid duration.
@@ -58,7 +56,6 @@ class Configuration(pydantic.BaseModel):
     path: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
     backends: tuple[pydantic.IPvAnyAddress, ...]
     protocol: Protocol
-    health_check_path: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
     health_check_interval: pydantic.PositiveInt
     backends_path: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
     proxy_cache_valid: tuple[str, ...]
@@ -105,19 +102,6 @@ class Configuration(pydantic.BaseModel):
         """
         return validate_path_value(value)
 
-    @pydantic.field_validator("health_check_path")
-    @classmethod
-    def validate_health_check_path(cls, value: str) -> str:
-        """Validate the health_check_path.
-
-        Args:
-            value: The value to validate.
-
-        Returns:
-            The value after validation.
-        """
-        return validate_path_value(value)
-
     @pydantic.field_validator("backends_path")
     @classmethod
     def validate_backends_path(cls, value: str) -> str:
@@ -145,7 +129,6 @@ class Configuration(pydantic.BaseModel):
         Returns:
             The value after validation.
         """
-
         for item in value:
             tokens = item.split(" ")
             if len(tokens) < 2:
@@ -175,9 +158,6 @@ class Configuration(pydantic.BaseModel):
         backends_str = typing.cast(str, charm.config.get(BACKENDS_CONFIG_NAME, "")).strip()
         if not backends_str:
             raise ConfigurationError("Empty backends configuration found")
-        health_check_path = typing.cast(
-            str, charm.config.get(HEALTH_CHECK_PATH_CONFIG_NAME, "")
-        ).strip()
         health_check_interval = typing.cast(
             int, charm.config.get(HEALTH_CHECK_INTERVAL_CONFIG_NAME, 30)
         )
@@ -190,9 +170,13 @@ class Configuration(pydantic.BaseModel):
         try:
             proxy_cache_valid = json.loads(proxy_cache_valid_str)
         except json.JSONDecodeError as err:
-            raise ConfigurationError(f"Unable to parse proxy_cache_valid: {proxy_cache_valid_str}") from err
+            raise ConfigurationError(
+                f"Unable to parse proxy_cache_valid: {proxy_cache_valid_str}"
+            ) from err
         if not isinstance(proxy_cache_valid, list):
-            raise ConfigurationError(f"The proxy_cache_valid is not a list: {proxy_cache_valid_str}")
+            raise ConfigurationError(
+                f"The proxy_cache_valid is not a list: {proxy_cache_valid_str}"
+            )
 
         try:
             return cls(
@@ -202,10 +186,9 @@ class Configuration(pydantic.BaseModel):
                 backends=backends,  # type: ignore
                 # Pydantic allows converting str to a string enum.
                 protocol=protocol,  # type: ignore
-                health_check_path=health_check_path,
                 health_check_interval=health_check_interval,
                 backends_path=backends_path,
-                proxy_cache_valid=proxy_cache_valid,
+                proxy_cache_valid=proxy_cache_valid,  # type: ignore
             )
         except pydantic.ValidationError as err:
             err_msg = [

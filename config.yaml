@@ -25,11 +25,6 @@ options:
       The protocol to request the backends. Can be http or https.
     type: string
     default: https
-  health-check-path:
-    description: |
-      The path part of the URL to query health checks on the backends.
-    type: string
-    default: /
   health-check-interval:
     description: |
       The seconds to wait between health checks on the backends.
