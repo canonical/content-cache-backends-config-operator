@@ -172,9 +172,7 @@ class Configuration(pydantic.BaseModel):
         backends_str = typing.cast(str, charm.config.get(BACKENDS_CONFIG_NAME, "")).strip()
         if not backends_str:
             raise ConfigurationError("Empty backends configuration found")
-        fail_timeout = typing.cast(
-            str, charm.config.get(FAIL_TIMEOUT_CONFIG_NAME, "")
-        ).strip()
+        fail_timeout = typing.cast(str, charm.config.get(FAIL_TIMEOUT_CONFIG_NAME, "")).strip()
         backends_path = typing.cast(str, charm.config.get(BACKENDS_PATH_CONFIG_NAME, "")).strip()
         proxy_cache_valid_str = typing.cast(
             str, charm.config.get(PROXY_CACHE_VALID_CONFIG_NAME, "")
