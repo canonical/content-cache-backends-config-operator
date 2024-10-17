@@ -27,9 +27,9 @@ options:
     default: https
   fail-timeout:
     description: |
-      The time to wait before using a backend after failure. This has no effect if only 
-      a single backend is configuration. The value should a positive int followed by s for seconds
-      or m for minutes.
+      The time to wait before using a backend after failure. This has no effect if only
+      a single backend is configuration. The value should a positive int followed by s for seconds,
+      m for minutes, or h for hours.
     type: string
     default: 30s
   backends-path:
@@ -40,8 +40,8 @@ options:
   proxy-cache-valid:
     description: |
       A list of HTTP response code(s) followed by a cache valid duration. For example ["200 302 1h
-      "", "404 1m"], which would mean 200 and 302 responses are cached for 1 hour and 404 responses 
-      are cached for 1 minute. This configuration is passed to nginx proxy-cache-valid 
+      "", "404 1m"], which would mean 200 and 302 responses are cached for 1 hour and 404 responses
+      are cached for 1 minute. This configuration is passed to nginx proxy-cache-valid
       (https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid).
     type: string
     default: '[]'
