@@ -99,7 +99,6 @@ def test_integration_data_not_leader(
     getattr(charm, event)(mock_event)
 
     data = harness.get_relation_data(relation_id, app_or_unit=charm.app.name)
-
     assert charm.unit.status == ops.ActiveStatus()
     assert data == {}
 
@@ -129,7 +128,6 @@ def test_integration_data(charm: ContentCacheBackendsConfigCharm, harness: Harne
     getattr(charm, event)(mock_event)
 
     data = harness.get_relation_data(relation_id, app_or_unit=charm.app.name)
-
     assert charm.unit.status == ops.ActiveStatus()
     assert data == {
         "hostname": "example.com",
@@ -195,6 +193,5 @@ def test_integration_removed(
     if is_leader:
         assert charm.unit.status == ops.BlockedStatus("Waiting for integration")
         return
-
     # follower unit is always active.
     assert charm.unit.status == ops.ActiveStatus()
