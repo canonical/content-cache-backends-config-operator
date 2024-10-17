@@ -45,8 +45,7 @@ class Configuration(pydantic.BaseModel):
         hostname: The hostname for the virtual host for this set of configuration.
         path: The path for this set of configuration.
         backends: The backends for this set of configuration.
-        protocol: The protocol to request the backends with. Can be http or
-            https.
+        protocol: The protocol to request the backends with. Can be http or https.
         fail_timeout: The time to wait before using a backend after failure.
         backends_path: The path to request the backends.
         proxy_cache_valid: The cache valid duration.
