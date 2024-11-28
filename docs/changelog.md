@@ -1,6 +1,14 @@
 # Changelog
 
+## 2024-10-15
+
+### Added
+
+- Support for fail-timeout, backends-path, and proxy-cache-valid charm configurations.
+
 ## 2024-10-07
 
-- Added a changelog for tracking user-relevant changes.
-- Added hostname, path, backends, protocol charm configurations.
+### Added
+
+- A changelog for tracking user-relevant changes.
+- Support for hostname, path, backends, and protocol charm configurations.

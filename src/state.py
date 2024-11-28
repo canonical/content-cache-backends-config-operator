@@ -21,6 +21,9 @@ HOSTNAME_CONFIG_NAME = "hostname"
 PATH_CONFIG_NAME = "path"
 BACKENDS_CONFIG_NAME = "backends"
 PROTOCOL_CONFIG_NAME = "protocol"
+FAIL_TIMEOUT_CONFIG_NAME = "fail-timeout"
+BACKENDS_PATH_CONFIG_NAME = "backends-path"
+PROXY_CACHE_VALID_CONFIG_NAME = "proxy-cache-valid"
 
 
 class Protocol(str, enum.Enum):
@@ -42,14 +45,19 @@ class Configuration(pydantic.BaseModel):
         hostname: The hostname for the virtual host for this set of configuration.
         path: The path for this set of configuration.
         backends: The backends for this set of configuration.
-        protocol: The protocol to request the backends with. Can be http or
-            https.
+        protocol: The protocol to request the backends with. Can be http or https.
+        fail_timeout: The time to wait before using a backend after failure.
+        backends_path: The path to request the backends.
+        proxy_cache_valid: The cache valid duration.
     """
 
     hostname: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
     path: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
     backends: tuple[pydantic.IPvAnyAddress, ...]
     protocol: Protocol
+    fail_timeout: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
+    backends_path: typing.Annotated[str, pydantic.StringConstraints(min_length=1)]
+    proxy_cache_valid: tuple[str, ...]
 
     @pydantic.field_validator("hostname")
     @classmethod
@@ -88,18 +96,60 @@ class Configuration(pydantic.BaseModel):
         Args:
             value: The value to validate.
 
-        Raises:
-            ValueError: The validation failed.
+        Returns:
+            The value after validation.
+        """
+        return validate_path_value(value)
+
+    @pydantic.field_validator("fail_timeout")
+    @classmethod
+    def validate_fail_timeout(cls, value: str) -> str:
+        """Validate the fail_timeout.
+
+        Args:
+            value: The value to validate.
 
         Returns:
             The value after validation.
         """
-        # This are the valid characters for path in addition to `/`:
-        # a-z A-Z 0-9 . - _ ~ ! $ & ' ( ) * + , ; = : @
-        # https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
-        valid_path = re.compile(r"[/\w.\-~!$&'()*+,;=:@]+", re.IGNORECASE)
-        if valid_path.fullmatch(value) is None:
-            raise ValueError("Path contains non-allowed character")
+        check_nginx_time_str(value)
+        return value
+
+    @pydantic.field_validator("backends_path")
+    @classmethod
+    def validate_backends_path(cls, value: str) -> str:
+        """Validate the backends_path.
+
+        Args:
+            value: The value to validate.
+
+        Returns:
+            The value after validation.
+        """
+        return validate_path_value(value)
+
+    @pydantic.field_validator("proxy_cache_valid")
+    @classmethod
+    def validate_proxy_cache_valid(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Validate the proxy_cache_valid.
+
+        Args:
+            value: The value to validate.
+
+        Raises:
+            ValueError: The proxy_cache_valid is invalid.
+
+        Returns:
+            The value after validation.
+        """
+        for item in value:
+            tokens = item.split(" ")
+            if len(tokens) < 2:
+                raise ValueError(f"Invalid item in proxy_cache_valid: {item}")
+            status_codes, time_str = tokens[:-1], tokens[-1]
+            for code_str in status_codes:
+                check_status_code(code_str)
+            check_nginx_time_str(time_str)
         return value
 
     @classmethod
@@ -121,16 +171,34 @@ class Configuration(pydantic.BaseModel):
         backends_str = typing.cast(str, charm.config.get(BACKENDS_CONFIG_NAME, "")).strip()
         if not backends_str:
             raise ConfigurationError("Empty backends configuration found")
+        fail_timeout = typing.cast(str, charm.config.get(FAIL_TIMEOUT_CONFIG_NAME, "")).strip()
+        backends_path = typing.cast(str, charm.config.get(BACKENDS_PATH_CONFIG_NAME, "")).strip()
+        proxy_cache_valid_str = typing.cast(
+            str, charm.config.get(PROXY_CACHE_VALID_CONFIG_NAME, "")
+        ).strip()
 
         backends = tuple(ip.strip() for ip in backends_str.split(","))
         try:
+            proxy_cache_valid = json.loads(proxy_cache_valid_str)
+        except json.JSONDecodeError as err:
+            raise ConfigurationError(
+                f"Unable to parse proxy_cache_valid: {proxy_cache_valid_str}"
+            ) from err
+        if not isinstance(proxy_cache_valid, list):
+            raise ConfigurationError(
+                f"The proxy_cache_valid is not a list: {proxy_cache_valid_str}"
+            )
+
+        try:
+            # Ignore type check and let pydantic handle the type with validation errors.
             return cls(
                 hostname=hostname,
                 path=path,
-                # Pydantic allows converting str to IPvAnyAddress.
                 backends=backends,  # type: ignore
-                # Pydantic allows converting str to a string enum.
                 protocol=protocol,  # type: ignore
+                fail_timeout=fail_timeout,
+                backends_path=backends_path,
+                proxy_cache_valid=proxy_cache_valid,  # type: ignore
             )
         except pydantic.ValidationError as err:
             err_msg = [
@@ -170,3 +238,67 @@ class Configuration(pydantic.BaseModel):
                     "Unable to convert configuration to integration data format"
                 ) from err
         return data
+
+
+def validate_path_value(value: str) -> str:
+    """Validate the value as a path.
+
+    Args:
+        value: The value to validate.
+
+    Raises:
+        ValueError: The validation failed.
+
+    Returns:
+        The value after validation.
+    """
+    # This are the valid characters for path in addition to `/`:
+    # a-z A-Z 0-9 . - _ ~ ! $ & ' ( ) * + , ; = : @
+    # https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
+    valid_path = re.compile(r"[/\w.\-~!$&'()*+,;=:@]+", re.IGNORECASE)
+    if valid_path.fullmatch(value) is None:
+        raise ValueError("Path contains non-allowed character")
+    return value
+
+
+def check_nginx_time_str(time_str: str) -> None:
+    """Check if nginx time str is valid.
+
+    Args:
+        time_str: The time str for nginx configuration.
+
+    Raises:
+        ValueError: The input is not valid time str for nginx.
+    """
+    time_char = {"h", "m", "s"}
+    if time_str[-1] not in time_char:
+        raise ValueError(f"Invalid time for proxy_cache_valid: {time_str}")
+    try:
+        time = int(time_str[:-1])
+    except ValueError as err:
+        raise ValueError(f"Non-int time in proxy_cache_valid: {time_str}") from err
+
+    if time < 1:
+        raise ValueError(f"Time must be positive int for proxy_cache_valid: {time_str}")
+
+
+def check_status_code(code_str: str) -> None:
+    """Check if status code is valid.
+
+    Args:
+        code_str: The status code.
+
+    Raises:
+        ValueError: The input is not valid status code.
+    """
+    try:
+        code = int(code_str)
+    except ValueError as err:
+        raise ValueError(f"Non-int status code in proxy_cache_valid: {code_str}") from err
+
+    # The standard status code is found here:
+    # https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+    # It is possible for software to have custom status code, so any three digit int is
+    # supported here.
+    if code < 100 or code > 999:
+        raise ValueError(f"Invalid status code in proxy_cache_valid: {code}")

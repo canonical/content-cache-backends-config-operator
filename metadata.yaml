@@ -14,11 +14,11 @@ display-name: Content Cache Backends Config
 
 # (Required)
 summary: Provides configuration to the Content Cache charm.
-docs: https://discourse.charmhub.io
-issues: https://github.com/canonical/content-cache-backends-config/issues
+docs: https://discourse.charmhub.io/t/content-cache-backends-config-documentation-overview/15991
+issues: https://github.com/canonical/content-cache-backends-config-operator/issues
 maintainers: 
   - https://launchpad.net/~canonical-is-devops
-source: https://github.com/canonical/content-cache-backends-config
+source: https://github.com/canonical/content-cache-backends-config-operator
 
 description: |
   Provides configuration for a location the associated set of backends to the Content Cache charm.
