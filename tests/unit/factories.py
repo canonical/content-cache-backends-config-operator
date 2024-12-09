@@ -10,9 +10,12 @@ import factory
 
 from src.state import (
     BACKENDS_CONFIG_NAME,
+    BACKENDS_PATH_CONFIG_NAME,
+    FAIL_TIMEOUT_CONFIG_NAME,
     HOSTNAME_CONFIG_NAME,
     PATH_CONFIG_NAME,
     PROTOCOL_CONFIG_NAME,
+    PROXY_CACHE_VALID_CONFIG_NAME,
 )
 
 T = typing.TypeVar("T")
@@ -50,5 +53,8 @@ class MockCharmFactory(factory.Factory):
             PATH_CONFIG_NAME: "/",
             BACKENDS_CONFIG_NAME: "10.10.1.1, 10.10.2.2",
             PROTOCOL_CONFIG_NAME: "https",
+            FAIL_TIMEOUT_CONFIG_NAME: "30s",
+            BACKENDS_PATH_CONFIG_NAME: "/",
+            PROXY_CACHE_VALID_CONFIG_NAME: "[]",
         }
     )
